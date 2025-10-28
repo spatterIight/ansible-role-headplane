@@ -9,7 +9,7 @@ server:
 
   # The secret used to encode and decode web sessions
   # Ensure that this is exactly 32 characters long
-  cookie_secret: "{{ headplane_cookie_secret }}"
+  cookie_secret: {{ headplane_cookie_secret | to_json }}
 
   # Should the cookies only work over HTTPS?
   # Set to false if running via HTTP without a proxy
@@ -30,7 +30,7 @@ headscale:
   # The URL to your Headscale instance
   # (All API requests are routed through this URL)
   # (THIS IS NOT the gRPC endpoint, but the HTTP endpoint)
-  url: "http://{{ headplane_headscale_hostname }}:{{ headplane_headscale_port }}"
+  url: http://{{ headplane_headscale_hostname }}:{{ headplane_headscale_port }}
 
   # Path to the Headscale configuration file
   # This is optional, but HIGHLY recommended for the best experience
@@ -62,11 +62,11 @@ integration:
     # This allows the UI to display version, OS, and connectivity data
     # You will see the Headplane agent in your Tailnet as a node when
     # it connects.
-    enabled: false
+    enabled: {{ headplane_config_integration_agent_enabled | to_json }}
 
     # To connect to your Tailnet, you need to generate a pre-auth key
     # This can be done via the web UI or through the `headscale` CLI.
-    pre_authkey: "<your-preauth-key>"
+    pre_authkey: {{ headplane_config_integration_agent_pre_authkey | to_json }}
 
     # Optionally change the name of the agent in the Tailnet.
     # host_name: "headplane-agent"
@@ -79,7 +79,7 @@ integration:
     # cache_path: /var/lib/headplane/agent_cache.json
 
   docker:
-    enabled: false
+    enabled: {{ headplane_config_integration_docker_enabled | to_json }}
 
     # By default we check for the presence of a container label (see the docs)
     # to determine the container to signal when changes are made to DNS settings.
@@ -90,7 +90,7 @@ integration:
     # automatically assign container names.
     #
     # If `container_name` is set, it will override any label checks.
-    container_name: "{{ headplane_headscale_container_name }}"
+    container_name: {{ headplane_headscale_container_name | to_json }}
 
     # The path to the Docker socket (do not change this if you are unsure)
     # Docker socket paths must start with unix:// or tcp:// and at the moment

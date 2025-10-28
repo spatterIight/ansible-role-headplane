@@ -20,6 +20,13 @@ headplane_arch: amd64
 # The hostname at which headplane is served.
 headplane_hostname: ''
 
+# The path at which headplane is served.
+# This value must either be `/` or not end with a slash (e.g. `/headplane`).
+headplane_path_prefix: /
+
+# Controls the `HEADPLANE_DEBUG_LOG=true` environment variable being set
+headplane_debugging_enabled: false
+
 # The name of the headscale docker container,
 # useful if enabling docker integration
 headplane_headscale_container_name: headscale
@@ -47,9 +54,14 @@ headplane_headscale_config_path_mount_options: readonly
 # Generate with `pwgen -s 32 1` or in another way
 headplane_cookie_secret: ''
 
-# The path at which headplane is served.
-# This value must either be `/` or not end with a slash (e.g. `/headplane`).
-headplane_path_prefix: /
+# Controls the `integration.agent.enabled` configuration value
+headplane_config_integration_agent_enabled: false
+
+# Controls the `integration.agent.pre_authkey` configuration value
+headplane_config_integration_agent_pre_authkey: ''
+
+# Controls the `integration.docker.enabled` configuration value
+headplane_config_integration_docker_enabled: false
 
 headplane_base_path: "{{ headplane_identifier }}"
 headplane_data_path: "{{ headplane_base_path }}/data"
