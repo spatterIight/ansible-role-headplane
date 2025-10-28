@@ -37,11 +37,11 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% if headplane_headscale_config_path %}
       --mount type=bind,src={{ headplane_headscale_config_path }}/config.yaml,dst=/etc/headscale/config.yaml{{ (',' + headplane_headscale_config_path_mount_options) if headplane_headscale_config_path_mount_options | default('') and headplane_headscale_config_path_mount_options != 'readwrite' else '' }} \
       {% endif %}
+      --mount type=bind,src={{ headplane_base_path }}/config.yaml,dst=/etc/headplane/config.yaml \
+      --mount type=bind,src={{ headplane_data_path }},dst=/var/lib/headplane \
       {% if headplane_headscale_extra_records_path %}
       --mount type=bind,src={{ headplane_headscale_extra_records_path }},dst=/var/lib/headplane/extra_records.json \
       {% endif %}
-      --mount type=bind,src={{ headplane_base_path }}/config.yaml,dst=/etc/headplane/config.yaml \
-      --mount type=bind,src={{ headplane_data_path }},dst=/var/lib/headplane \
       {% for volume in headplane_container_additional_volumes %}
       --mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options | default('') else '' }} \
       {% endfor %}

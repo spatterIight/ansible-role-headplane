@@ -51,7 +51,9 @@ headscale:
   # readable and writable to the Headplane process.
   # When using this, Headplane will no longer need to automatically
   # restart Headscale for DNS record changes.
-  # dns_records_path: "/var/lib/headplane/extra_records.json"
+{% if headplane_headscale_extra_records_path %}
+  dns_records_path: "/var/lib/headplane/extra_records.json"
+{% endif %}
 
 # Integration configurations for Headplane to interact with Headscale
 integration:
