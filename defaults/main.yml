@@ -34,6 +34,8 @@ headplane_headscale_config_path: ''
 
 # Control options for the mounting of `headplane_headscale_config_path`
 # Defaults to 'readonly', which is more secure but disables changes to DNS
+#
+# Set `headplane_headscale_config_path_mount_options` to an empty string to mount as read-write
 headplane_headscale_config_path_mount_options: readonly
 
 # The secret used to encode and decode web sessions
