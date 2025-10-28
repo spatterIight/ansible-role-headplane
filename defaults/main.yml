@@ -24,6 +24,9 @@ headplane_hostname: ''
 # useful if enabling docker integration
 headplane_headscale_container_name: headscale
 
+# Controls the headscale.dns_records_path configuration
+headplane_headscale_extra_records_enabled: false
+
 # The hostname at which headscale is served
 headplane_headscale_hostname: headscale
 headplane_headscale_port: 8080
