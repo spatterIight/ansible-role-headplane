@@ -35,7 +35,10 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --env-file={{ headplane_base_path }}/env \
       --label-file={{ headplane_base_path }}/labels \
       {% if headplane_headscale_config_path %}
-      --mount type=bind,src={{ headplane_headscale_config_path }}/config.yaml,dst=/etc/headscale/config.yaml{{ (',' + headplane_headscale_config_path_mount_options) if headplane_headscale_config_path_mount_options | default('') else '' }} \
+      --mount type=bind,src={{ headplane_headscale_config_path }}/config.yaml,dst=/etc/headscale/config.yaml{{ (',' + headplane_headscale_config_path_mount_options) if headplane_headscale_config_path_mount_options | default('') and headplane_headscale_config_path_mount_options != 'readwrite' else '' }} \
+      {% endif %}
+      {% if headplane_headscale_extra_records_path %}
+      --mount type=bind,src={{ headplane_headscale_extra_records_path }},dst=/var/lib/headplane/extra_records.json \
       {% endif %}
       --mount type=bind,src={{ headplane_base_path }}/config.yaml,dst=/etc/headplane/config.yaml \
       --mount type=bind,src={{ headplane_data_path }},dst=/var/lib/headplane \
