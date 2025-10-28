@@ -20,6 +20,16 @@ headplane_arch: amd64
 # The hostname at which headplane is served.
 headplane_hostname: ''
 
+# The hostname at which headscale is served
+headplane_headscale_hostname: headscale
+headplane_headscale_port: 8080
+
+# The secret used to encode and decode web sessions
+# Ensure that this is exactly 32 characters long
+#
+# Generate with `pwgen -s 32 1` or in another way
+headplane_cookie_secret: ''
+
 # The path at which headplane is served.
 # This value must either be `/` or not end with a slash (e.g. `/headplane`).
 headplane_path_prefix: /

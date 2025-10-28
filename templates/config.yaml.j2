@@ -5,11 +5,11 @@
 # Configuration for the Headplane server and web application
 server:
   host: "0.0.0.0"
-  port: 3000
+  port: {{ headplane_container_http_port }}
 
   # The secret used to encode and decode web sessions
   # Ensure that this is exactly 32 characters long
-  cookie_secret: "<change_me_to_something_secure!>"
+  cookie_secret: "{{ headplane_cookie_secret }}"
 
   # Should the cookies only work over HTTPS?
   # Set to false if running via HTTP without a proxy
@@ -32,7 +32,7 @@ headscale:
   # (THIS IS NOT the gRPC endpoint, but the HTTP endpoint)
   #
   # IMPORTANT: If you are using TLS this MUST be set to `https://`
-  url: "http://headscale:5000"
+  url: "http://{{ headplane_headscale_hostname }}:{{ headplane_headscale_port }}"
 
   # If you use the TLS configuration in Headscale, and you are not using
   # Let's Encrypt for your certificate, pass in the path to the certificate.
@@ -112,86 +112,3 @@ integration:
     # Docker socket paths must start with unix:// or tcp:// and at the moment
     # https connections are not supported.
     socket: "unix:///var/run/docker.sock"
-
-  # Please refer to docs/integration/Kubernetes.md for more information
-  # on how to configure the Kubernetes integration. There are requirements in
-  # order to allow Headscale to be controlled by Headplane in a cluster.
-  kubernetes:
-    enabled: false
-    # Validates the manifest for the Pod to ensure all of the criteria
-    # are set correctly. Turn this off if you are having issues with
-    # shareProcessNamespace not being validated correctly.
-    validate_manifest: true
-    # This should be the name of the Pod running Headscale and Headplane.
-    # If this isn't static you should be using the Kubernetes Downward API
-    # to set this value (refer to docs/Integrated-Mode.md for more info).
-    pod_name: "headscale"
-
-  # Proc is the "Native" integration that only works when Headscale and
-  # Headplane are running outside of a container. There is no configuration,
-  # but you need to ensure that the Headplane process can terminate the
-  # Headscale process.
-  #
-  # (If they are both running under systemd as sudo, this will work).
-  proc:
-    enabled: false
-
-# OIDC Configuration for simpler authentication
-# (This is optional, but recommended for the best experience)
-oidc:
-  issuer: "https://accounts.google.com"
-
-  # If your OIDC provider does not support discovery (does not have the URL at
-  # `/.well-known/openid-configuration`), you need to manually set endpoints.
-  # This also works to override endpoints if you so desire or if your OIDC
-  # discovery is missing certain endpoints (ie GitHub).
-  # For some typical providers, see the documentation.
-
-  # authorization_endpoint: ""
-  # token_endpoint: ""
-  # userinfo_endpoint: ""
-
-  # The client ID for the OIDC client
-  # For the best experience please ensure this is *identical* to the client_id
-  # you are using for Headscale. A lot of OIDC providers will use different
-  # subjects per user based on the client_id and for this to work correctly
-  # they need to be identical between Headscale and Headplane.
-  client_id: "your-client-id"
-
-  # The client secret for the OIDC client
-  # Either this or `client_secret_path` must be set for OIDC to work
-  client_secret: "<your-client-secret>"
-  # You can alternatively set `client_secret_path` to read the secret from disk.
-  # The path specified can resolve environment variables, making integration
-  # with systemd's `LoadCredential` straightforward:
-  # client_secret_path: "${CREDENTIALS_DIRECTORY}/oidc_client_secret"
-
-  # Defaults to 'openid email profile'
-  # scope: "openid email profile"
-
-  disable_api_key_login: false
-  token_endpoint_auth_method: "client_secret_post"
-
-  # If you are using OIDC, you need to generate an API key
-  # that can be used to authenticate other sessions when signing in.
-  #
-  # This can be done with `headscale apikeys create --expiration 999d`
-  headscale_api_key: "<your-headscale-api-key>"
-
-  # Optional, but highly recommended otherwise Headplane
-  # will attempt to automatically guess this from the issuer
-  #
-  # This should point to your publicly accessibly URL
-  # for your Headplane instance with /admin/oidc/callback
-  redirect_uri: "http://localhost:3000/admin/oidc/callback"
-
-  # By default profile pictures are pulled from the OIDC provider when
-  # we go to fetch the userinfo endpoint. Optionally, this can be set to
-  # "oidc" or "gravatar" as of 0.6.1.
-  # profile_picture_source: "gravatar"
-
-  # Extra query parameters can be passed to the authorization endpoint
-  # by setting them here. This is useful for providers that require any kind
-  # of custom hinting.
-  # extra_params:
-  #   prompt: "select_account" # Example: force account selection on Google
