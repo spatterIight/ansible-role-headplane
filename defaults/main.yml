@@ -24,6 +24,10 @@ headplane_hostname: ''
 headplane_headscale_hostname: headscale
 headplane_headscale_port: 8080
 
+# The path at which the headscale configuration file is stored outside of the container
+# Set to an empty string to not mount
+headplane_headscale_config_path: ''
+
 # The secret used to encode and decode web sessions
 # Ensure that this is exactly 32 characters long
 #

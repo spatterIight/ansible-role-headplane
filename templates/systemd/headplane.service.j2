@@ -34,6 +34,9 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% endif %}
       --env-file={{ headplane_base_path }}/env \
       --label-file={{ headplane_base_path }}/labels \
+      {% if headplane_headscale_config_path %}
+      --mount type=bind,src={{ headplane_headscale_config_path }}/config.yaml,dst=/etc/headscale/config.yaml,readonly \
+      {% endif %}
       --mount type=bind,src={{ headplane_base_path }}/config.yaml,dst=/etc/headplane/config.yaml \
       --mount type=bind,src={{ headplane_data_path }},dst=/var/lib/headplane \
       {% for volume in headplane_container_additional_volumes %}
