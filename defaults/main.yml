@@ -20,6 +20,10 @@ headplane_arch: amd64
 # The hostname at which headplane is served.
 headplane_hostname: ''
 
+# The name of the headscale docker container,
+# useful if enabling docker integration
+headplane_headscale_container_name: headscale
+
 # The hostname at which headscale is served
 headplane_headscale_hostname: headscale
 headplane_headscale_port: 8080

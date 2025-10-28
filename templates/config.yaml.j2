@@ -81,14 +81,14 @@ integration:
 
     # By default we check for the presence of a container label (see the docs)
     # to determine the container to signal when changes are made to DNS settings.
-    container_label: "me.tale.headplane.target=headscale"
+    # container_label: "me.tale.headplane.target=headscale"
 
     # HOWEVER, you can fallback to a container name if you desire, but this is
     # not recommended as its brittle and doesn't work with orchestrators that
     # automatically assign container names.
     #
     # If `container_name` is set, it will override any label checks.
-    # container_name: "headscale"
+    container_name: "{{ headplane_headscale_container_name }}"
 
     # The path to the Docker socket (do not change this if you are unsure)
     # Docker socket paths must start with unix:// or tcp:// and at the moment
