@@ -60,7 +60,11 @@ integration:
     # This allows the UI to display version, OS, and connectivity data
     # You will see the Headplane agent in your Tailnet as a node when
     # it connects.
+    {% if headplane_pre_authkey %}
     enabled: true
+    {% else %}
+    enabled: false
+    {% endif %}
 
     # To connect to your Tailnet, you need to generate a pre-auth key
     # This can be done via the web UI or through the `headscale` CLI.

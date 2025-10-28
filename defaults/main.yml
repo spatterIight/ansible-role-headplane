@@ -30,6 +30,13 @@ headplane_headscale_port: 8080
 # Generate with `pwgen -s 32 1` or in another way
 headplane_cookie_secret: ''
 
+# A preauthkey that allows Headplane to integrate w/ Headscale
+# Set `headplane_pre_authkey` to a preauthkey to enable integration, or an empty string to disable.
+#
+# Instructions on creating a preauthkey:
+# https://headscale.net/stable/usage/getting-started/#using-a-preauthkey
+headplane_pre_authkey: ''
+
 # The path at which headplane is served.
 # This value must either be `/` or not end with a slash (e.g. `/headplane`).
 headplane_path_prefix: /

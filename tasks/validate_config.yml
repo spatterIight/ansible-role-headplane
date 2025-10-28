@@ -13,6 +13,7 @@
     - headplane_uid
     - headplane_gid
     - headplane_hostname
+    - headplane_cookie_secret
 
 - name: Fail if Headplane architecture is not supported
   ansible.builtin.fail:
