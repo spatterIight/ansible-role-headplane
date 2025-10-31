@@ -23,12 +23,18 @@ headplane_arch: amd64
 # The hostname at which headplane is served.
 headplane_hostname: ''
 
-# The public URL at which headscale is served
-headplane_headscale_public_url: ''
-
 # The path at which headplane is served.
 # This value must either be `/` or not end with a slash (e.g. `/headplane`).
 headplane_path_prefix: /
+
+# The secret used to encode and decode web sessions
+# Ensure that this is exactly 32 characters long
+#
+# Generate with `pwgen -s 32 1` or in another way
+headplane_cookie_secret: ''
+
+# The public URL at which headscale is served
+headplane_headscale_public_url: ''
 
 # Controls the `HEADPLANE_DEBUG_LOG=true` environment variable being set
 headplane_debugging_enabled: false
@@ -54,12 +60,6 @@ headplane_headscale_config_path: ''
 # Set `headplane_headscale_config_path_mount_options` to 'readwrite' to mount as read-write
 headplane_headscale_config_path_mount_options: readonly
 
-# The secret used to encode and decode web sessions
-# Ensure that this is exactly 32 characters long
-#
-# Generate with `pwgen -s 32 1` or in another way
-headplane_cookie_secret: ''
-
 # Controls the `integration.agent.enabled` configuration value
 headplane_config_integration_agent_enabled: false
 
@@ -67,9 +67,11 @@ headplane_config_integration_agent_enabled: false
 headplane_config_integration_agent_pre_authkey: ''
 
 # Controls the `integration.docker.enabled` configuration value
+# and the mounting of `headplane_config_integration_docker_endpoint` into the container
 headplane_config_integration_docker_enabled: false
 
 # Controls the `integration.docker.socket` configuration value
+# and the mounting of `headplane_config_integration_docker_endpoint` into the container
 headplane_config_integration_docker_endpoint: ''
 
 # Controls the mounting of `headplane_config_integration_docker_endpoint` into the container
