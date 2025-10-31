@@ -42,7 +42,7 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% if headscale_extra_records_path_enabled %}
       --mount type=bind,src={{ headscale_data_path }}/extra-records.json,dst=/var/lib/headplane/extra_records.json \
       {% endif %}
-      {% if headplane_docker_endpoint_is_unix_socket %}
+      {% if headplane_config_integration_docker_enabled and headplane_config_integration_docker_endpoint and headplane_docker_endpoint_is_unix_socket %}
       --mount type=bind,src={{ headplane_config_integration_docker_endpoint | replace('unix://', '') }},dst=/var/run/docker.sock,ro \
       {% endif %}
       {% for volume in headplane_container_additional_volumes %}

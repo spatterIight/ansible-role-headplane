@@ -13,6 +13,9 @@ headplane_identifier: headplane
 headplane_uid: ''
 headplane_gid: ''
 
+headplane_base_path: "{{ headplane_identifier }}"
+headplane_data_path: "{{ headplane_base_path }}/data"
+
 # renovate: datasource=docker depName=ghcr.io/tale/headplane versioning=semver
 headplane_version: 0.6.1
 headplane_arch: amd64
@@ -72,9 +75,6 @@ headplane_config_integration_docker_endpoint: ''
 # Controls the mounting of `headplane_config_integration_docker_endpoint` into the container
 headplane_docker_endpoint_is_unix_socket: false
 
-headplane_base_path: "{{ headplane_identifier }}"
-headplane_data_path: "{{ headplane_base_path }}/data"
-
 headplane_container_image: "{{ headplane_container_image_registry_prefix }}tale/headplane:{{ headplane_container_image_tag }}"
 headplane_container_image_tag: "{{ headplane_version }}"
 headplane_container_image_registry_prefix: ghcr.io/
@@ -127,6 +127,10 @@ headplane_container_labels_traefik_priority: 0
 headplane_container_labels_traefik_entrypoints: web-secure
 headplane_container_labels_traefik_tls: "{{ headplane_container_labels_traefik_entrypoints != 'web' }}"
 headplane_container_labels_traefik_tls_certResolver: default  # noqa var-naming
+
+# Controls the addition of a set of Traefik labels
+# which automatically redirect to /admin when `headplane_path_prefix` is '/'
+headplane_container_labels_traefik_automatically_redirect_to_admin: true
 
 # headplane_container_labels_additional_labels contains a multiline string with additional labels to add to the container label file.
 # See `../templates/labels.j2` for details.
