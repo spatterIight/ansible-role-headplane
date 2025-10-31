@@ -14,6 +14,8 @@
     - headplane_gid
     - headplane_hostname
     - headplane_cookie_secret
+    - headplane_headscale_hostname
+    - headplane_headscale_port
 
 - name: Fail if Headplane architecture is not supported
   ansible.builtin.fail:

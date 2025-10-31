@@ -32,11 +32,19 @@ headscale:
   # (THIS IS NOT the gRPC endpoint, but the HTTP endpoint)
   url: http://{{ headplane_headscale_hostname }}:{{ headplane_headscale_port }}
 
+  # Optional, public URL if they differ
+  # This affects certain parts of the web UI
+{% if headplane_headscale_public_url %}
+  public_url: {{ headplane_headscale_public_url | to_json }}
+{% endif %}
+
   # Path to the Headscale configuration file
   # This is optional, but HIGHLY recommended for the best experience
   # If this is read only, Headplane will show your configuration settings
   # in the Web UI, but they cannot be changed.
+{% if headplane_headscale_config_path %}
   config_path: "/etc/headscale/config.yaml"
+{% endif %}
 
   # Headplane internally validates the Headscale configuration
   # to ensure that it changes the configuration in a safe way.

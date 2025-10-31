@@ -20,6 +20,9 @@ headplane_arch: amd64
 # The hostname at which headplane is served.
 headplane_hostname: ''
 
+# The public URL at which headscale is served
+headplane_headscale_public_url: ''
+
 # The path at which headplane is served.
 # This value must either be `/` or not end with a slash (e.g. `/headplane`).
 headplane_path_prefix: /
