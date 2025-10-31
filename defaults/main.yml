@@ -66,6 +66,12 @@ headplane_config_integration_agent_pre_authkey: ''
 # Controls the `integration.docker.enabled` configuration value
 headplane_config_integration_docker_enabled: false
 
+# Controls the `integration.docker.socket` configuration value
+headplane_config_integration_docker_endpoint: ''
+
+# Controls the mounting of `headplane_config_integration_docker_endpoint` into the container
+headplane_docker_endpoint_is_unix_socket: false
+
 headplane_base_path: "{{ headplane_identifier }}"
 headplane_data_path: "{{ headplane_base_path }}/data"
 
