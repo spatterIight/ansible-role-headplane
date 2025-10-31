@@ -1,0 +1,108 @@
+# SPDX-FileCopyrightText: 2025 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Configuration for the Headplane server and web application
+server:
+  host: "0.0.0.0"
+  port: {{ headplane_container_http_port }}
+
+  # The secret used to encode and decode web sessions
+  # Ensure that this is exactly 32 characters long
+  cookie_secret: {{ headplane_cookie_secret | to_json }}
+
+  # Should the cookies only work over HTTPS?
+  # Set to false if running via HTTP without a proxy
+  # (I recommend this is true in production)
+  cookie_secure: true
+
+  # The path to persist Headplane specific data. All data going forward
+  # is stored in this directory, including the internal database and
+  # any cache related files.
+  #
+  # Data formats prior to 0.6.1 will automatically be migrated.
+  # PLEASE ensure this directory is mounted if running in Docker.
+  data_path: "/var/lib/headplane"
+
+# Headscale specific settings to allow Headplane to talk
+# to Headscale and access deep integration features
+headscale:
+  # The URL to your Headscale instance
+  # (All API requests are routed through this URL)
+  # (THIS IS NOT the gRPC endpoint, but the HTTP endpoint)
+  url: http://{{ headplane_headscale_hostname }}:{{ headplane_headscale_port }}
+
+  # Optional, public URL if they differ
+  # This affects certain parts of the web UI
+{% if headplane_headscale_public_url %}
+  public_url: {{ headplane_headscale_public_url | to_json }}
+{% endif %}
+
+  # Path to the Headscale configuration file
+  # This is optional, but HIGHLY recommended for the best experience
+  # If this is read only, Headplane will show your configuration settings
+  # in the Web UI, but they cannot be changed.
+{% if headplane_headscale_config_path %}
+  config_path: "/etc/headscale/config.yaml"
+{% endif %}
+
+  # Headplane internally validates the Headscale configuration
+  # to ensure that it changes the configuration in a safe way.
+  # If you want to disable this validation, set this to false.
+  config_strict: true
+
+  # If you are using `dns.extra_records_path` in your Headscale
+  # configuration, you need to set this to the path for Headplane
+  # to be able to read the DNS records.
+  #
+  # Pass it in if using Docker and ensure that the file is both
+  # readable and writable to the Headplane process.
+  # When using this, Headplane will no longer need to automatically
+  # restart Headscale for DNS record changes.
+{% if headplane_headscale_extra_records_enabled %}
+  dns_records_path: "/var/lib/headplane/extra_records.json"
+{% endif %}
+
+# Integration configurations for Headplane to interact with Headscale
+integration:
+  agent:
+    # The Headplane agent allows retrieving information about nodes
+    # This allows the UI to display version, OS, and connectivity data
+    # You will see the Headplane agent in your Tailnet as a node when
+    # it connects.
+    enabled: {{ headplane_config_integration_agent_enabled | to_json }}
+
+    # To connect to your Tailnet, you need to generate a pre-auth key
+    # This can be done via the web UI or through the `headscale` CLI.
+    pre_authkey: {{ headplane_config_integration_agent_pre_authkey | to_json }}
+
+    # Optionally change the name of the agent in the Tailnet.
+    # host_name: "headplane-agent"
+
+    # Configure different caching settings. By default, the agent will store
+    # caches in the path below for a maximum of 1 minute. If you want data
+    # to update faster, reduce the TTL, but this will increase the frequency
+    # of requests to Headscale.
+    # cache_ttl: 60
+    # cache_path: /var/lib/headplane/agent_cache.json
+
+  docker:
+    enabled: {{ headplane_config_integration_docker_enabled | to_json }}
+
+    # By default we check for the presence of a container label (see the docs)
+    # to determine the container to signal when changes are made to DNS settings.
+    # container_label: "me.tale.headplane.target=headscale"
+
+    # HOWEVER, you can fallback to a container name if you desire, but this is
+    # not recommended as its brittle and doesn't work with orchestrators that
+    # automatically assign container names.
+    #
+    # If `container_name` is set, it will override any label checks.
+    container_name: {{ headplane_headscale_container_name | to_json }}
+
+    # The path to the Docker socket (do not change this if you are unsure)
+    # Docker socket paths must start with unix:// or tcp:// and at the moment
+    # https connections are not supported.
+{% if headplane_config_integration_docker_endpoint %}
+    socket: {{ headplane_config_integration_docker_endpoint | to_json }}
+{% endif %}

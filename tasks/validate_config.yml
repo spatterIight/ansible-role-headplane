@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Fail if required Headplane settings not defined
+  ansible.builtin.fail:
+    msg: >-
+      You need to define a required configuration setting (`{{ item }}`).
+  when: "lookup('vars', item, default='') | string | length == 0"
+  with_items:
+    - headplane_uid
+    - headplane_gid
+    - headplane_hostname
+    - headplane_cookie_secret
+    - headplane_headscale_hostname
+    - headplane_headscale_port
+
+- name: Fail if Headplane architecture is not supported
+  ansible.builtin.fail:
+    msg: >-
+      Your configuration specifies a CPU architecture (`{{ headplane_arch }}`) which is not currently supported.
+      This Headplane role also does not support self-building yet, so it's not possible to make use of it.
+  when: "headplane_arch not in ['amd64', 'arm64']"
+
+- name: Validate Headplane Traefik configuration
+  when: headplane_container_labels_traefik_enabled | bool
+  block:
+    - name: Fail if Traefik settings required for Headplane are not defined
+      ansible.builtin.fail:
+        msg: >-
+          You need to define a required configuration setting (`{{ item }}`).
+      when: "lookup('vars', item, default='') | string | length == 0"
+      with_items:
+        - headplane_container_labels_traefik_hostname
+        - headplane_container_labels_traefik_path_prefix
+
+    # We ensure it doesn't end with a slash, because we handle both (slash and no-slash).
+    # Knowing that `headplane_container_labels_traefik_path_prefix` does not end with a slash
+    # ensures we know how to set these routes up without having to do "does it end with a slash" checks elsewhere.
+    - name: Fail if headplane_container_labels_traefik_path_prefix ends with a slash
+      ansible.builtin.fail:
+        msg: >-
+          headplane_container_labels_traefik_path_prefix (`{{ headplane_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/headplane`).
+      when: "headplane_container_labels_traefik_path_prefix != '/' and headplane_container_labels_traefik_path_prefix[-1] == '/'"

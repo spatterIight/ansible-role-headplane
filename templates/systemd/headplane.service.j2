@@ -1,0 +1,70 @@
+{#
+SPDX-FileCopyrightText: 2025 Slavi Pantaleev
+SPDX-FileCopyrightText: 2025 spatterlight
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
+[Unit]
+Description=Headplane ({{ headplane_identifier }})
+{% for service in headplane_systemd_required_services_list %}
+Requires={{ service }}
+After={{ service }}
+{% endfor %}
+{% for service in headplane_systemd_wanted_services_list %}
+Wants={{ service }}
+{% endfor %}
+
+[Service]
+Type=simple
+Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ headplane_container_stop_grace_time_seconds }} {{ headplane_identifier }} 2>/dev/null || true'
+ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ headplane_identifier }} 2>/dev/null || true'
+
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
+      --rm \
+      --name={{ headplane_identifier }} \
+      --log-driver=none \
+      --user={{ headplane_uid }}:{{ headplane_gid }} \
+      --cap-drop=ALL \
+      --read-only \
+      --network={{ headplane_container_network }} \
+      {% if headplane_container_http_bind_port %}
+      -p {{ headplane_container_http_bind_port }}:{{ headplane_container_http_port }} \
+      {% endif %}
+      --env-file={{ headplane_base_path }}/env \
+      --label-file={{ headplane_base_path }}/labels \
+      {% if headplane_headscale_config_path %}
+      --mount type=bind,src={{ headplane_headscale_config_path }}/config.yaml,dst=/etc/headscale/config.yaml{{ (',' + headplane_headscale_config_path_mount_options) if headplane_headscale_config_path_mount_options | default('') and headplane_headscale_config_path_mount_options != 'readwrite' else '' }} \
+      {% endif %}
+      --mount type=bind,src={{ headplane_base_path }}/config.yaml,dst=/etc/headplane/config.yaml \
+      --mount type=bind,src={{ headplane_data_path }},dst=/var/lib/headplane \
+      {% if headscale_extra_records_path_enabled %}
+      --mount type=bind,src={{ headscale_data_path }}/extra-records.json,dst=/var/lib/headplane/extra_records.json \
+      {% endif %}
+      {% if headplane_config_integration_docker_enabled and headplane_config_integration_docker_endpoint and headplane_docker_endpoint_is_unix_socket %}
+      --mount type=bind,src={{ headplane_config_integration_docker_endpoint | replace('unix://', '') }},dst=/var/run/docker.sock,ro \
+      {% endif %}
+      {% for volume in headplane_container_additional_volumes %}
+      --mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options | default('') else '' }} \
+      {% endfor %}
+      {% for arg in headplane_container_extra_arguments %}
+      {{ arg }} \
+      {% endfor %}
+      {{ headplane_container_image }}
+
+{% for network in headplane_container_additional_networks %}
+ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ headplane_identifier }}
+{% endfor %}
+
+ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach {{ headplane_identifier }}
+
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ headplane_container_stop_grace_time_seconds }} {{ headplane_identifier }} 2>/dev/null || true'
+ExecStop=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ headplane_identifier }} 2>/dev/null || true'
+
+Restart=always
+RestartSec=30
+SyslogIdentifier={{ headplane_identifier }}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2025 spatterlight
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Check existence of Headplane systemd service
+  ansible.builtin.stat:
+    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ headplane_identifier }}.service"
+  register: headplane_service_stat
+
+- name: Uninstall Headplane systemd services and files
+  when: headplane_service_stat.stat.exists | bool
+  block:
+    - name: Ensure Headplane systemd service is stopped
+      ansible.builtin.service:
+        name: "{{ headplane_identifier }}"
+        state: stopped
+        enabled: false
+        daemon_reload: true
+
+    - name: Ensure Headplane systemd service does not exist
+      ansible.builtin.file:
+        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ headplane_identifier }}.service"
+        state: absent
+
+    - name: Ensure Headplane container network does not exist via community.docker.docker_network
+      when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
+      community.docker.docker_network:
+        name: "{{ headplane_container_network }}"
+        state: absent
+
+    - name: Ensure Headplane container network does not exist via ansible.builtin.command
+      when: devture_systemd_docker_base_container_network_creation_method == 'command'
+      ansible.builtin.command:
+        cmd: >-
+          {{ devture_systemd_docker_base_host_command_docker }} network rm
+          {{ headplane_container_network }}
+      register: network_deletion_result
+      changed_when: headplane_container_network in network_deletion_result.stdout
+
+    - name: Ensure Headplane path does not exist
+      ansible.builtin.file:
+        path: "{{ headplane_base_path }}"
+        state: absent
