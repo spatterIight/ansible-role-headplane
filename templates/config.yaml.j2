@@ -63,6 +63,7 @@ headscale:
   dns_records_path: "/var/lib/headplane/extra_records.json"
 {% endif %}
 
+{% if headplane_config_integration_agent_enabled %}
 # Integration configurations for Headplane to interact with Headscale
 integration:
   agent:
@@ -85,7 +86,9 @@ integration:
     # of requests to Headscale.
     # cache_ttl: 60
     # cache_path: /var/lib/headplane/agent_cache.json
+{% endif %}
 
+{% if headplane_config_integration_docker_enabled %}
   docker:
     enabled: {{ headplane_config_integration_docker_enabled | to_json }}
 
@@ -105,4 +108,5 @@ integration:
     # https connections are not supported.
 {% if headplane_config_integration_docker_endpoint %}
     socket: {{ headplane_config_integration_docker_endpoint | to_json }}
+{% endif %}
 {% endif %}
