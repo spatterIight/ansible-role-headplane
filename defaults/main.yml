@@ -17,7 +17,7 @@ headplane_base_path: "{{ headplane_identifier }}"
 headplane_data_path: "{{ headplane_base_path }}/data"
 
 # renovate: datasource=docker depName=ghcr.io/tale/headplane versioning=semver
-headplane_version: 0.6.1
+headplane_version: 0.6.2
 headplane_arch: amd64
 
 # The hostname at which headplane is served.
