@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 spatterlight
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -15,14 +16,6 @@
     - "{{ headplane_base_path }}"
     - "{{ headplane_data_path }}"
 
-- name: Ensure Headplane configuration file installed
-  ansible.builtin.copy:
-    content: "{{ headplane_configuration | to_nice_yaml(indent=2, width=999999) }}"
-    dest: "{{ headplane_base_path }}/config.yaml"
-    mode: "0644"
-    owner: "{{ headplane_uid }}"
-    group: "{{ headplane_gid }}"
-
 - name: Ensure Headplane support files installed
   ansible.builtin.template:
     src: "{{ role_path }}/templates/{{ item }}.j2"
@@ -33,26 +26,36 @@
   with_items:
     - env
     - labels
+  register: headplane_support_files_result
+
+- name: Ensure Headplane configuration file installed
+  ansible.builtin.copy:
+    content: "{{ headplane_configuration | to_nice_yaml(indent=2, width=999999) }}"
+    dest: "{{ headplane_base_path }}/config.yaml"
+    mode: "0644"
+    owner: "{{ headplane_uid }}"
+    group: "{{ headplane_gid }}"
+  register: headplane_config_file_result
 
 - name: Ensure Headplane container image is pulled via community.docker.docker_image_pull
   when: devture_systemd_docker_base_container_image_pull_method == 'ansible-module'
   community.docker.docker_image_pull:
     name: "{{ headplane_container_image }}"
     pull: always
-  register: result
+  register: headplane_container_image_pull_result_ansible_module
   retries: "{{ devture_playbook_help_container_retries_count }}"
   delay: "{{ devture_playbook_help_container_retries_delay }}"
-  until: result is not failed
+  until: headplane_container_image_pull_result_ansible_module is not failed
 
 - name: Ensure Headplane container image is pulled via ansible.builtin.command
   when: devture_systemd_docker_base_container_image_pull_method == 'command'
   ansible.builtin.command:
     cmd: "{{ devture_systemd_docker_base_host_command_docker }} pull {{ headplane_container_image }}"
-  register: result
+  register: headplane_container_image_pull_result_command
   retries: "{{ devture_playbook_help_container_retries_count }}"
   delay: "{{ devture_playbook_help_container_retries_delay }}"
-  until: result is not failed
-  changed_when: "'Downloaded newer image' in result.stdout"
+  until: headplane_container_image_pull_result_command is not failed
+  changed_when: "'Downloaded newer image' in headplane_container_image_pull_result_command.stdout"
 
 - name: Ensure Headplane container network is created via community.docker.docker_network
   when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
@@ -61,6 +64,7 @@
     name: "{{ headplane_container_network }}"
     driver: bridge
     driver_options: "{{ devture_systemd_docker_base_container_networks_driver_options }}"
+  register: headplane_network_creation_result
 
 - name: Ensure Headplane container network is created via ansible.builtin.command
   when: devture_systemd_docker_base_container_network_creation_method == 'command'
@@ -70,12 +74,24 @@
       {% if devture_systemd_docker_base_ipv6_enabled %}--ipv6{% endif %}
       {{ devture_systemd_docker_base_container_networks_driver_options_string }}
       {{ headplane_container_network }}
-  register: network_creation_result
-  changed_when: network_creation_result.rc == 0
-  failed_when: network_creation_result.rc != 0 and 'already exists' not in network_creation_result.stderr
+  register: headplane_network_creation_result
+  changed_when: headplane_network_creation_result.rc == 0
+  failed_when: headplane_network_creation_result.rc != 0 and 'already exists' not in headplane_network_creation_result.stderr
 
 - name: Ensure Headplane systemd service is present
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/headplane.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ headplane_identifier }}.service"
     mode: "0644"
+  register: headplane_systemd_service_result
+
+- name: Determine whether Headplane needs a restart
+  ansible.builtin.set_fact:
+    headplane_restart_necessary: >-
+      {{
+        headplane_support_files_result.changed | default(false)
+        or headplane_config_file_result.changed | default(false)
+        or headplane_systemd_service_result.changed | default(false)
+        or headplane_container_image_pull_result_ansible_module.changed | default(false)
+        or headplane_container_image_pull_result_command.changed | default(false)
+      }}

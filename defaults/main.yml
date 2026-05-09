@@ -1,4 +1,10 @@
+# SPDX-FileCopyrightText: 2023 Niels Bouma
+# SPDX-FileCopyrightText: 2023, 2024 Nikita Chernyi
+# SPDX-FileCopyrightText: 2023-2025 MASH project contributors
+# SPDX-FileCopyrightText: 2023-2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
 # SPDX-FileCopyrightText: 2025 spatterlight
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -194,3 +200,13 @@ headplane_configuration_extension: "{{ headplane_configuration_extension_yaml | 
 # Holds the final Headplane configuration (a combination of the default and its extension).
 # You most likely don't need to touch this variable. Instead, see `headplane_configuration_yaml`.
 headplane_configuration: "{{ headplane_configuration_yaml | from_yaml | combine(headplane_configuration_extension, recursive=true) }}"
+
+# headplane_restart_necessary controls whether the Headplane systemd
+# service will be restarted (when true) or merely started (when false) by the
+# systemd service manager role (when conditional restart is enabled).
+#
+# This value is automatically computed during installation based on whether
+# any configuration files, the systemd service file, or the container image changed.
+# The default of `false` means "no restart needed" — appropriate when the role's
+# installation tasks haven't run (e.g., due to --tags skipping them).
+headplane_restart_necessary: false
