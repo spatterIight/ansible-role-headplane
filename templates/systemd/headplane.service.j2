@@ -1,6 +1,8 @@
 {#
-SPDX-FileCopyrightText: 2025 Slavi Pantaleev
+SPDX-FileCopyrightText: 2023, 2025 Slavi Pantaleev
+SPDX-FileCopyrightText: 2024 Nikita Chernyi
 SPDX-FileCopyrightText: 2025 spatterlight
+SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -18,8 +20,7 @@ Wants={{ service }}
 [Service]
 Type=simple
 Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
-ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ headplane_container_stop_grace_time_seconds }} {{ headplane_identifier }} 2>/dev/null || true'
-ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm {{ headplane_identifier }} 2>/dev/null || true'
+ExecStartPre={{ devture_systemd_docker_base_host_command_sh }} -c '{{ headplane_container_cleanup_command | trim | replace("\n", " ") }}'
 
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --rm \

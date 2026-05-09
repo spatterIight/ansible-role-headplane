@@ -201,6 +201,37 @@ headplane_configuration_extension: "{{ headplane_configuration_extension_yaml | 
 # You most likely don't need to touch this variable. Instead, see `headplane_configuration_yaml`.
 headplane_configuration: "{{ headplane_configuration_yaml | from_yaml | combine(headplane_configuration_extension, recursive=true) }}"
 
+# Controls how long to wait for the container to stop gracefully before killing it.
+headplane_container_stop_grace_time_seconds: "{{ devture_systemd_docker_base_container_stop_grace_time_seconds }}"
+
+# Controls how long the pre-start cleanup should wait for stale container-name release
+# before failing startup explicitly.
+headplane_container_cleanup_timeout_seconds: "{{ devture_systemd_docker_base_container_cleanup_timeout_seconds }}"
+
+# Controls the delay between pre-start cleanup retries.
+headplane_container_cleanup_retry_delay_seconds: "{{ devture_systemd_docker_base_container_cleanup_retry_delay_seconds }}"
+
+# Shell command used in the systemd pre-start phase to deterministically remove a stale
+# container and wait until Docker releases its name.
+headplane_container_cleanup_command: |
+  i=0;
+  while [ "$i" -lt {{ headplane_container_cleanup_timeout_seconds }} ]; do
+  {{ devture_systemd_docker_base_host_command_docker }} stop -t {{ headplane_container_stop_grace_time_seconds }} {{ headplane_identifier }} >/dev/null 2>&1 || true;
+  {{ devture_systemd_docker_base_host_command_docker }} rm -f {{ headplane_identifier }} >/dev/null 2>&1 || true;
+  if {{ devture_systemd_docker_base_host_command_docker }} container inspect {{ headplane_identifier }} >/dev/null 2>&1; then
+  i=$((i + 1));
+  sleep {{ headplane_container_cleanup_retry_delay_seconds }};
+  continue;
+  fi;
+  if {{ devture_systemd_docker_base_host_command_docker }} info >/dev/null 2>&1; then
+  exit 0;
+  fi;
+  echo "Failed to query Docker daemon while cleaning up {{ headplane_identifier }}" >&2;
+  exit 1;
+  done;
+  echo "Failed to remove stale container {{ headplane_identifier }} after {{ headplane_container_cleanup_timeout_seconds }} attempts" >&2;
+  exit 1
+
 # headplane_restart_necessary controls whether the Headplane systemd
 # service will be restarted (when true) or merely started (when false) by the
 # systemd service manager role (when conditional restart is enabled).
