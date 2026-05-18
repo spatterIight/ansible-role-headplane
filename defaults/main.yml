@@ -16,8 +16,8 @@ headplane_enabled: true
 
 headplane_identifier: headplane
 
-headplane_uid: ''
-headplane_gid: ''
+headplane_uid: ""
+headplane_gid: ""
 
 headplane_base_path: "{{ headplane_identifier }}"
 headplane_data_path: "{{ headplane_base_path }}/data"
@@ -27,7 +27,7 @@ headplane_version: 0.6.2
 headplane_arch: amd64
 
 # The hostname at which headplane is served.
-headplane_hostname: ''
+headplane_hostname: ""
 
 # The path at which headplane is served.
 # This value must either be `/` or not end with a slash (e.g. `/headplane`).
@@ -37,10 +37,10 @@ headplane_path_prefix: /
 # Ensure that this is exactly 32 characters long
 #
 # Generate with `pwgen -s 32 1` or in another way
-headplane_cookie_secret: ''
+headplane_cookie_secret: ""
 
 # The public URL at which headscale is served
-headplane_headscale_public_url: ''
+headplane_headscale_public_url: ""
 
 # Controls the `HEADPLANE_DEBUG_LOG=true` environment variable being set
 headplane_debugging_enabled: false
@@ -58,7 +58,7 @@ headplane_headscale_port: 8080
 
 # The path at which the headscale configuration file is stored outside of the container
 # Set to an empty string to not mount
-headplane_headscale_config_path: ''
+headplane_headscale_config_path: ""
 
 # Control options for the mounting of `headplane_headscale_config_path`
 # Defaults to 'readonly', which is more secure but disables changes to DNS
@@ -70,7 +70,7 @@ headplane_headscale_config_path_mount_options: readonly
 headplane_config_integration_agent_enabled: false
 
 # Controls the `integration.agent.pre_authkey` configuration value
-headplane_config_integration_agent_pre_authkey: ''
+headplane_config_integration_agent_pre_authkey: ""
 
 # Controls the `integration.docker.enabled` configuration value
 # and the mounting of `headplane_config_integration_docker_endpoint` into the container
@@ -78,7 +78,7 @@ headplane_config_integration_docker_enabled: false
 
 # Controls the `integration.docker.socket` configuration value
 # and the mounting of `headplane_config_integration_docker_endpoint` into the container
-headplane_config_integration_docker_endpoint: ''
+headplane_config_integration_docker_endpoint: ""
 
 # Controls the mounting of `headplane_config_integration_docker_endpoint` into the container
 headplane_docker_endpoint_is_unix_socket: false
@@ -122,6 +122,7 @@ headplane_container_http_bind_port: ""
 headplane_container_labels_traefik_enabled: true
 headplane_container_labels_traefik_docker_network: "{{ headplane_container_network }}"
 headplane_container_labels_traefik_hostname: "{{ headplane_hostname }}"
+
 # The path prefix must either be `/` or not end with a slash (e.g. `/headplane`).
 headplane_container_labels_traefik_path_prefix: "{{ headplane_path_prefix }}"
 headplane_container_labels_traefik_rule: "Host(`{{ headplane_container_labels_traefik_hostname }}`){% if headplane_container_labels_traefik_path_prefix != '/' %} && PathPrefix(`{{ headplane_container_labels_traefik_path_prefix }}`){% endif %}"
@@ -141,7 +142,7 @@ headplane_container_labels_traefik_automatically_redirect_to_admin: true
 # headplane_container_labels_additional_labels: |
 #   my.label=1
 #   another.label="here"
-headplane_container_labels_additional_labels: ''
+headplane_container_labels_additional_labels: ""
 
 # headplane_environment_variables_additional_variables contains a multiline string with additional environment variables to pass to the container.
 #
@@ -149,7 +150,7 @@ headplane_container_labels_additional_labels: ''
 # headplane_environment_variables_additional_variables: |
 #   VAR=1
 #   ANOTHER=value
-headplane_environment_variables_additional_variables: ''
+headplane_environment_variables_additional_variables: ""
 
 # A list of additional "volumes" to mount in the container.
 #
