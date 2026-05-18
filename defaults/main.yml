@@ -15,12 +15,11 @@
 headplane_enabled: true
 
 headplane_identifier: headplane
+headplane_base_path: "/{{ headplane_identifier }}"
+headplane_data_path: "{{ headplane_base_path }}/data"
 
 headplane_uid: ""
 headplane_gid: ""
-
-headplane_base_path: "{{ headplane_identifier }}"
-headplane_data_path: "{{ headplane_base_path }}/data"
 
 # renovate: datasource=docker depName=ghcr.io/tale/headplane versioning=semver
 headplane_version: 0.6.2
