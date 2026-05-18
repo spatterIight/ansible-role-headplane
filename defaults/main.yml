@@ -90,6 +90,9 @@ headplane_container_image_registry_prefix: ghcr.io/
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 headplane_container_network: "{{ headplane_identifier }}"
 
+# Control if the container network is deleted on uninstalling.
+headplane_container_network_deletion_enabled: true
+
 # A list of additional container networks that the container would be connected to.
 # The role does not create these networks, so make sure they already exist.
 headplane_container_additional_networks: "{{ (headplane_container_additional_networks_default + headplane_container_additional_networks_auto + headplane_container_additional_networks_custom) | unique }}"
