@@ -126,7 +126,6 @@ headplane_container_http_bind_port: ""
 headplane_container_labels_traefik_enabled: true
 headplane_container_labels_traefik_docker_network: "{{ headplane_container_network }}"
 headplane_container_labels_traefik_hostname: "{{ headplane_hostname }}"
-
 # The path prefix must either be `/` or not end with a slash (e.g. `/headplane`).
 headplane_container_labels_traefik_path_prefix: "{{ headplane_path_prefix }}"
 headplane_container_labels_traefik_rule: "Host(`{{ headplane_container_labels_traefik_hostname }}`){% if headplane_container_labels_traefik_path_prefix != '/' %} && PathPrefix(`{{ headplane_container_labels_traefik_path_prefix }}`){% endif %}"
