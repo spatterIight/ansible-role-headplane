@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Wait for headplane service to become active (up to 180s)
+      ansible.builtin.systemd:
+        name: headplane.service
+      register: svc
+      until: svc.status.ActiveState == 'active'
+      retries: 36
+      delay: 5
+
+    - name: Assert headplane service is active
+      ansible.builtin.assert:
+        that: svc.status.ActiveState == 'active'
+        fail_msg: "headplane.service not active ({{ svc.status.ActiveState }})"
+        success_msg: "headplane.service is active"
+
+    - name: Wait for headplane HTTP endpoint to respond (up to 10m)
+      ansible.builtin.uri:
+        url: "http://localhost:3000/admin"
+        method: GET
+        status_code: [200, 302]
+        follow_redirects: none
+      register: ep
+      until: ep.status in [200, 302]
+      retries: 120
+      delay: 5
+
+    - name: Assert headplane HTTP endpoint responds
+      ansible.builtin.assert:
+        that: ep.status in [200, 302]
+        fail_msg: "headplane did not respond as expected ({{ ep.status | default('no response') }})"
+        success_msg: "headplane responded with {{ ep.status }}"
+
+    - name: Show service status summary
+      ansible.builtin.debug:
+        msg:
+          - "headplane systemd: {{ svc.status.ActiveState }}"
+          - "headplane HTTP: {{ ep.status }}"

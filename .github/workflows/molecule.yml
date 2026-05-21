@@ -1,0 +1,58 @@
+---
+name: molecule
+
+on: [push, pull_request]  # yamllint disable-line rule:truthy
+
+jobs:
+  molecule:
+    name: molecule [${{ matrix.distro }}] [${{ matrix.scenario }}]
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        distro:
+          - ubuntu2604
+          - debian13
+        scenario:
+          - default
+      fail-fast: false
+
+    env:
+      MOLECULE_DISTRO: ${{ matrix.distro }}
+      PY_COLORS: "1"
+      ANSIBLE_FORCE_COLOR: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          path: headplane
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: headplane/.python-version
+          cache: pip
+          cache-dependency-path: headplane/molecule/requirements.txt
+
+      - name: Install Python dependencies
+        working-directory: headplane
+        run: pip install -r molecule/requirements.txt
+
+      - name: Cache Ansible collections
+        uses: actions/cache@v4
+        with:
+          path: ~/.ansible/collections
+          key: ansible-collections-${{ hashFiles('headplane/molecule/default/requirements.yml') }}
+
+      - name: Install Ansible roles
+        working-directory: headplane
+        run: ansible-galaxy role install -r molecule/default/requirements.yml
+
+      - name: Install Ansible collections
+        working-directory: headplane
+        run: ansible-galaxy collection install -r molecule/default/requirements.yml
+
+      - name: Run molecule
+        working-directory: headplane
+        run: molecule test --scenario-name ${{ matrix.scenario }}
