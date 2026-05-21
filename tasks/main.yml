@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: 2023 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2025 spatterlight
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
 - name: Perform Headplane installation tasks
+  when: headplane_enabled | bool
   tags:
     - setup-all
     - setup-headplane
@@ -12,18 +14,15 @@
     - install-headplane
   block:
     - name: Validate Headplane configuration
-      when: headplane_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
-
     - name: Install Headplane
-      when: headplane_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
 - name: Perform Headplane uninstallation tasks
+  when: not headplane_enabled | bool
   tags:
     - setup-all
     - setup-headplane
   block:
     - name: Uninstall Headplane
-      when: not headplane_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
