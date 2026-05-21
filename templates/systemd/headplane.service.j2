@@ -40,7 +40,7 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% endif %}
       --mount type=bind,src={{ headplane_base_path }}/config.yaml,dst=/etc/headplane/config.yaml \
       --mount type=bind,src={{ headplane_data_path }},dst=/var/lib/headplane \
-      {% if headscale_extra_records_path_enabled %}
+      {% if headscale_extra_records_path_enabled | default(false) %}
       --mount type=bind,src={{ headscale_data_path }}/extra-records.json,dst=/var/lib/headplane/extra_records.json \
       {% endif %}
       {% if headplane_config_integration_docker_enabled and headplane_config_integration_docker_endpoint and headplane_docker_endpoint_is_unix_socket %}

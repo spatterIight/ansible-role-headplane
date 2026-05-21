@@ -7,11 +7,21 @@
   "labels": [
     "dependencies"
   ],
+  "pip_requirements": {
+    "managerFilePatterns": ["(^|/)requirements[^/]*\\.txt$"]
+  },
+  "ansible-galaxy": {
+    "managerFilePatterns": ["(^|/)molecule/default/requirements\\.ya?ml$"]
+  },
+  "pyenv": {
+    "enabled": true
+  },
   "packageRules": [
     {
       "matchFileNames": [
         ".pre-commit-config.yaml",
         ".github/workflows/autotag.yml",
+        ".github/workflows/molecule.yml",
         ".github/workflows/pre-commit.yml",
         "mise.toml"
       ],
@@ -20,6 +30,17 @@
       "automergeType": "branch",
       "schedule": ["* * 1 */6 *"],
       "automergeSchedule": ["* * 1-3 */6 *"]
+    },
+    {
+      "matchPackageNames": ["ansible", "ansible-core"],
+      "groupName": "ansible",
+      "groupSlug": "ansible"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/tale/headplane"],
+      "groupName": "headplane docker image",
+      "groupSlug": "headplane"
     }
   ],
   "customManagers": [
@@ -29,7 +50,7 @@
         "/defaults/main.yml$/"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>[a-z-.]+?) depName=(?<depName>[^\\s]+?)(?: (?:lookupName|packageName)=(?<packageName>[^\\s]+?))?(?: versioning=(?<versioning>[a-z-0-9]+?))?\\s+[A-Za-z0-9_]+?(?:_version|_tag)\\s*:\\s*[\"']?(?<currentValue>.+?)[\"']?\\s"
+        "# renovate: datasource=(?<datasource>[a-z-.]+?) depName=(?<depName>[^\\s]+?)(?: (?:lookupName|packageName)=(?<packageName>[^\\s]+?))?(?: versioning=(?<versioning>[a-z-0-9]+?))?\\s+[A-Za-z0-9_]+?(?:_version|_tag)\\s*:\\s*[\"']?(?<currentValue>.+?)[\"']?(?:\\s|$)"
       ]
     }
   ],
