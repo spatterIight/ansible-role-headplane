@@ -3,44 +3,44 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Verify
+- name: Verify Headplane systemd service
   hosts: all
   become: true
   gather_facts: false
   tasks:
-    - name: Wait for headplane service to become active (up to 180s)
+    - name: Wait for Headplane service to become active (up to 180s)
       ansible.builtin.systemd:
         name: headplane.service
-      register: svc
-      until: svc.status.ActiveState == 'active'
+      register: headplane_service
+      until: headplane_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
 
-    - name: Assert headplane service is active
+    - name: Assert Headplane service is active
       ansible.builtin.assert:
-        that: svc.status.ActiveState == 'active'
-        fail_msg: "headplane.service not active ({{ svc.status.ActiveState }})"
+        that: headplane_service.status.ActiveState == 'active'
+        fail_msg: "headplane.service not active ({{ headplane_service.status.ActiveState }})"
         success_msg: "headplane.service is active"
 
-    - name: Wait for headplane HTTP endpoint to respond (up to 10m)
+    - name: Wait for Headplane HTTP endpoint to respond (up to 10m)
       ansible.builtin.uri:
         url: "http://localhost:3000/admin"
         method: GET
         status_code: [200, 302]
         follow_redirects: none
-      register: ep
-      until: ep.status in [200, 302]
+      register: headplane_endpoint
+      until: headplane_endpoint.status in [200, 302]
       retries: 120
       delay: 5
 
-    - name: Assert headplane HTTP endpoint responds
+    - name: Assert Headplane HTTP endpoint responds
       ansible.builtin.assert:
-        that: ep.status in [200, 302]
-        fail_msg: "headplane did not respond as expected ({{ ep.status | default('no response') }})"
-        success_msg: "headplane responded with {{ ep.status }}"
+        that: headplane_endpoint.status in [200, 302]
+        fail_msg: "Headplane did not respond as expected ({{ headplane_endpoint.status | default('no response') }})"
+        success_msg: "Headplane responded with {{ headplane_endpoint.status }}"
 
-    - name: Show service status summary
+    - name: Show Headplane systemd service status summary
       ansible.builtin.debug:
         msg:
-          - "headplane systemd: {{ svc.status.ActiveState }}"
-          - "headplane HTTP: {{ ep.status }}"
+          - "Headplane systemd: {{ headplane_service.status.ActiveState }}"
+          - "Headplane HTTP: {{ headplane_endpoint.status }}"
