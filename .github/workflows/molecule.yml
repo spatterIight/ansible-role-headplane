@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 ---
 name: molecule
 
@@ -5,7 +9,7 @@ on: [push, pull_request]  # yamllint disable-line rule:truthy
 
 jobs:
   molecule:
-    name: molecule [${{ matrix.distro }}] [${{ matrix.scenario }}]
+    name: Run Molecule scenario '${{ matrix.scenario }}' on ${{ matrix.distro }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -24,12 +28,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
         with:
           path: headplane
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6.2.0
         with:
           python-version-file: headplane/.python-version
           cache: pip
@@ -40,7 +44,7 @@ jobs:
         run: pip install -r molecule/requirements.txt
 
       - name: Cache Ansible collections
-        uses: actions/cache@v4
+        uses: actions/cache@v5.0.5
         with:
           path: ~/.ansible/collections
           key: ansible-collections-${{ hashFiles('headplane/molecule/default/requirements.yml') }}
@@ -53,6 +57,6 @@ jobs:
         working-directory: headplane
         run: ansible-galaxy collection install -r molecule/default/requirements.yml
 
-      - name: Run molecule
+      - name: Run Molecule
         working-directory: headplane
         run: molecule test --scenario-name ${{ matrix.scenario }}
