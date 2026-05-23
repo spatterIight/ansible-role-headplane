@@ -11,12 +11,11 @@ path = [
     ".github/renovate.json",
     ".gitignore",
     ".pre-commit-config.yaml",
-    ".yamllint.yml",
-    ".github/workflows/molecule.yml",
     ".python-version",
+    ".yamllint.yml",
     "meta/main.yml",
-    "molecule/requirements.txt",
-    "molecule/**/requirements.yml"
+    "molecule/**/requirements.yml",
+    "molecule/requirements.txt"
 ]
 SPDX-FileCopyrightText = "NONE"
 SPDX-License-Identifier = "CC0-1.0"
