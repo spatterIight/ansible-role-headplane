@@ -22,6 +22,12 @@
         fail_msg: "headplane.service not active ({{ headplane_service.status.ActiveState }})"
         success_msg: "headplane.service is active"
 
+    - name: Retrieve Headplane service log for debugging
+      when: headplane_debug_service_enabled | bool
+      ansible.builtin.command:
+        cmd: journalctl -xeu headplane.service
+      changed_when: false
+
     - name: Wait for Headplane HTTP endpoint to respond (up to 10m)
       ansible.builtin.uri:
         url: "http://localhost:3000/admin"

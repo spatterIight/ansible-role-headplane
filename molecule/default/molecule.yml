@@ -28,6 +28,10 @@ provisioner:
   inventory:
     group_vars:
       all:
+        # Helper variables
+        headplane_debug_service_enabled: false
+
+        # Variables for Headplane
         headplane_uid: 1000
         headplane_gid: 1000
         headplane_hostname: headplane
