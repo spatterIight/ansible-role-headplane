@@ -28,9 +28,13 @@ provisioner:
   inventory:
     group_vars:
       all:
+        # Helper variables
+        headplane_debug_service_enabled: false
+
+        # Variables for Headplane
         headplane_uid: 1000
         headplane_gid: 1000
-        headplane_hostname: headplane
+        headplane_hostname: localhost
         headplane_cookie_secret: "molecule-test-secret-12345678901"
         headplane_container_labels_traefik_enabled: false
         headplane_container_http_bind_port: 3000

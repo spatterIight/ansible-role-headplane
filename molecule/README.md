@@ -23,7 +23,7 @@ To utilize Molecule you need to prepare several requirements:
   - **Archlinux**
   - **CentOS**, **Rocky Linux**, **AlmaLinux**, or possibly other RHEL alternatives (although your mileage may vary)
   - **Debian** (10/Buster or newer)
-  - **Ubuntu** (18.04 or newer, although [20.04 may be problematic](ansible.md#supported-ansible-versions) if you run the Ansible playbook on it)
+  - **Ubuntu** (18.04 or newer, although [20.04 may be problematic](https://github.com/mother-of-all-self-hosting/mash-playbook/blob/main/docs/ansible.md#supported-ansible-versions) if you run the Ansible playbook on it)
 - `root` access on the computer which Molecule runs against
 - [Ansible](http://ansible.com/) program
 - [Python](https://www.python.org/)
