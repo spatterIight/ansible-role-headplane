@@ -7,6 +7,7 @@ dependency:
   name: galaxy
   options:
     requirements-file: requirements.yml
+    force: true
 driver:
   name: docker
 platforms:
