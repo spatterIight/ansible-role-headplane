@@ -44,6 +44,21 @@
     - headplane_config_integration_agent_enabled | bool
     - headplane_config_headscale_api_key | string | length == 0
 
+- name: Warn if the Headplane agent may need Tailscale netns handling disabled
+  ansible.builtin.debug:
+    msg: >-
+      The Headplane agent is enabled with `headplane_config_integration_agent_tailscale_netns: true`
+      while Headplane uses additional container networks. This role drops all container capabilities
+      by default, so Tailscale's socket handling may route the agent's Headscale connection through
+      the wrong network. Typical MASH deployments require
+      `headplane_config_integration_agent_tailscale_netns: false`, which lets the agent use ordinary
+      route selection. Keep `true` only if routing or container capabilities have been configured
+      for Tailscale's default behavior in this network topology.
+  when:
+    - headplane_config_integration_agent_enabled | bool
+    - headplane_config_integration_agent_tailscale_netns | bool
+    - headplane_container_additional_networks | length > 0
+
 - name: Fail if Headplane architecture is not supported
   ansible.builtin.fail:
     msg: >-
