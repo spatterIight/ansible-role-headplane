@@ -44,6 +44,20 @@
     - headplane_config_integration_agent_enabled | bool
     - headplane_config_headscale_api_key | string | length == 0
 
+- name: Explain Headplane agent routing on additional networks
+  ansible.builtin.debug:
+    msg: >-
+      The Headplane agent is enabled with `headplane_config_integration_agent_tailscale_netns: true`
+      while Headplane uses additional container networks. If the agent cannot reach Headscale,
+      check which interface Tailscale selects and whether ordinary container routing reaches Headscale.
+      If Tailscale selects the wrong interface and ordinary routing works, setting
+      `headplane_config_integration_agent_tailscale_netns: false` lets the agent use ordinary
+      route selection. Otherwise, leave netns handling enabled to retain Tailscale's loop avoidance.
+  when:
+    - headplane_config_integration_agent_enabled | bool
+    - headplane_config_integration_agent_tailscale_netns | bool
+    - headplane_container_additional_networks | length > 0
+
 - name: Fail if Headplane architecture is not supported
   ansible.builtin.fail:
     msg: >-
