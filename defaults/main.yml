@@ -25,8 +25,24 @@ headplane_gid: ""
 headplane_version: 0.7.1
 headplane_arch: amd64
 
+# The scheme used for serving Headplane.
+# Set this to the browser-facing scheme, including when TLS terminates at an external proxy.
+# Configure Traefik entrypoints and TLS separately to match how Headplane is exposed.
+headplane_scheme: https
+
 # The hostname at which headplane is served.
 headplane_hostname: ""
+
+# The public URL of Headplane, used to construct OIDC callback URLs.
+# Do not include the dashboard prefix (/admin).
+headplane_config_server_base_url: "{{ headplane_scheme }}://{{ headplane_hostname }}"
+
+# Whether session cookies require HTTPS, based on the browser-facing URL.
+# TLS termination at a reverse proxy still uses secure cookies for an HTTPS URL.
+# This default follows headplane_config_server_base_url before YAML extension or environment overrides.
+# If an override changes the URL scheme, also set server.cookie_secure in the YAML extension
+# or HEADPLANE_SERVER__COOKIE_SECURE in the environment: true for HTTPS, false for HTTP.
+headplane_config_server_cookie_secure: "{{ (headplane_config_server_base_url | urlsplit('scheme')) != 'http' }}"
 
 # The path at which headplane is served.
 # This value must either be `/` or not end with a slash (e.g. `/headplane`).
