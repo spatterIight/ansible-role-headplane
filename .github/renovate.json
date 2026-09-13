@@ -2,6 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": "No patch-automerge: this 0.x upstream ships breaking work in patch releases (0.6.1 raised the Headscale floor and migrated its data store, 0.6.2 dropped Headscale <= 0.25 and changed config options), so a Headplane bump needs a human to read the release notes first.",
   "extends": [
-    "github>mother-of-all-self-hosting/renovate-config#v1.0.0"
+    "github>mother-of-all-self-hosting/renovate-config#v1.1.0"
   ]
 }
