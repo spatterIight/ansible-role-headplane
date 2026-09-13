@@ -38,10 +38,6 @@ headplane_hostname: ""
 headplane_config_server_base_url: "{{ headplane_scheme }}://{{ headplane_hostname }}"
 
 # Whether session cookies require HTTPS, based on the browser-facing URL.
-# TLS termination at a reverse proxy still uses secure cookies for an HTTPS URL.
-# This default follows headplane_config_server_base_url before YAML extension or environment overrides.
-# If an override changes the URL scheme, also set server.cookie_secure in the YAML extension
-# or HEADPLANE_SERVER__COOKIE_SECURE in the environment: true for HTTPS, false for HTTP.
 headplane_config_server_cookie_secure: "{{ (headplane_config_server_base_url | urlsplit('scheme')) != 'http' }}"
 
 # The path at which headplane is served.
