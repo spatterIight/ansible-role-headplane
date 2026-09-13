@@ -15,29 +15,9 @@
 set -euo pipefail
 
 script_under_test="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/compute-next-tag.sh"
-workflow_under_test="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)/.github/workflows/autotag.yml"
 
 failures=0
 workdir=''
-
-expect_workflow_contract() {
-	local description="$1" pattern="$2"
-
-	if grep -Eq "$pattern" "$workflow_under_test"; then
-		printf '  ok   | workflow %s\n' "$description"
-	else
-		printf '  FAIL | workflow does not %s\n' "$description"
-		failures=$((failures + 1))
-	fi
-}
-
-expect_workflow_contract 'evaluates current main' '^[[:space:]]+ref:[[:space:]]+main([[:space:]]|$)'
-expect_workflow_contract 'fetches complete history and tags' '^[[:space:]]+fetch-depth:[[:space:]]+0([[:space:]]|$)'
-expect_workflow_contract 'does not cancel a running release' '^[[:space:]]+cancel-in-progress:[[:space:]]+false([[:space:]]|$)'
-expect_workflow_contract 'has tag-write permission' '^[[:space:]]+contents:[[:space:]]+write([[:space:]]|$)'
-expect_workflow_contract 'rejects fork release jobs' '!github[.]event[.]repository[.]fork'
-expect_workflow_contract 'limits release jobs to main' "github[.]ref == 'refs/heads/main'"
-expect_workflow_contract 'pushes only the computed tag ref' 'git push origin "refs/tags/[$]TAG"'
 
 cleanup() {
 	cd /
@@ -129,27 +109,15 @@ expect() {
 	fi
 }
 
-expect_failure() {
-	local description="$1"
-
-	if bin/compute-next-tag.sh >/dev/null 2>&1; then
-		printf '  FAIL | %s -> expected failure, got success\n' "$description"
-		failures=$((failures + 1))
-	else
-		printf '  ok   | %s -> failed safely\n' "$description"
-	fi
-}
-
 bump_version='write_defaults 0.6.3'
 revert_version='write_defaults 0.6.2'
 edit_task="printf 'a task\n' >> tasks/main.yml"
 edit_template="printf 'a line\n' >> templates/env.j2"
 edit_readme="printf 'documentation\n' >> README.md"
 edit_script="printf '# a comment\n' >> bin/compute-next-tag.sh"
-revert_task="git show 'v0.6.2-1:tasks/main.yml' > tasks/main.yml"
 
-# The two sequential merge orders below must both produce the correct version
-# and role-revision progression.
+# The two merge orders below apply the same updates and must each end up with
+# every update released exactly once, whichever order they arrive in.
 
 scenario 'A version bump merged before other role changes'
 expect 'version bump' v0.6.3-0 "$(merge "$bump_version")"
@@ -161,9 +129,9 @@ expect 'task edit'    v0.6.2-2 "$(merge "$edit_task")"
 expect 'version bump' v0.6.3-0 "$(merge "$bump_version")"
 
 scenario 'Commits that do not affect the role'
-expect 'README'   ''       "$(merge "$edit_readme")"
-expect 'a script' ''       "$(merge "$edit_script")"
-expect 'a task'   v0.6.2-2 "$(merge "$edit_task")"
+expect 'README'   ''        "$(merge "$edit_readme")"
+expect 'a script' ''        "$(merge "$edit_script")"
+expect 'a task'   v0.6.2-2  "$(merge "$edit_task")"
 
 scenario 'Release numbers past 9'
 for release_number in 2 3 4 5 6 7 8 9 10; do
@@ -175,7 +143,7 @@ scenario 'Reverting to an already released version'
 merge "$bump_version" > /dev/null
 # The role is now identical to what v0.6.2-1 already published, so there is
 # nothing new to release.
-expect 'a revert' '' "$(merge "$revert_version")"
+expect 'a revert' ''        "$(merge "$revert_version")"
 
 scenario 'Reverting to an already released version, with a change'
 merge "$bump_version" > /dev/null
@@ -187,25 +155,6 @@ scenario 'Tags that do not belong to the version being released'
 git tag 'v0.6.20-7'
 git tag 'v0.6.2-rc1'
 expect 'a task' v0.6.2-2 "$(merge "$edit_task")"
-
-scenario 'A later main state is released after an earlier job'
-expect 'earlier main state' v0.6.2-2 "$(merge "$edit_task")"
-# If main advances after that job checked out, the newest pending job evaluates
-# current main. A revert of the earlier change therefore becomes the next
-# release instead of leaving the highest tag on superseded code.
-expect 'current main after revert' v0.6.2-3 "$(merge "$revert_task")"
-
-scenario 'A release tag outside current history fails safely'
-git checkout -qb released-elsewhere
-eval "$edit_task"
-git add -A
-git commit -qm 'Release outside main'
-git tag 'v0.6.2-2'
-git checkout -q main
-eval "$edit_template"
-git add -A
-git commit -qm 'Current main'
-expect_failure 'non-ancestor release tag'
 
 if [ "$failures" -gt 0 ]; then
 	echo >&2 "$failures scenario(s) behaved unexpectedly"

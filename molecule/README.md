@@ -49,6 +49,14 @@ Currently there is one testing scenario available.
 
 Tests a standard Headplane installation.
 
+Headplane is a web UI for [Headscale](https://headscale.net/) and says very little about itself in isolation: with Headscale entirely absent it still boots, serves its login page and answers redirects. So this scenario installs [`ansible-role-headscale`](https://github.com/mother-of-all-self-hosting/ansible-role-headscale) alongside it, joins the Headplane container to Headscale's container network, and points Headplane at Headscale's configuration file. What it then checks only passes when the two are actually talking:
+
+- `/admin/healthz`, the endpoint Headplane's own container healthcheck uses, answers `200 {"status":"OK"}`. With Headscale unreachable it answers `500 {"status":"ERROR"}` while `/admin` keeps redirecting exactly as before.
+- Headplane logs the Headscale version it negotiated, cross-checked against the image tag the Headscale role deployed.
+- Headplane reports having parsed the Headscale configuration file that the Headscale role wrote.
+- The container healthcheck reaches `healthy`, which additionally requires the writable `/tmp` the role mounts and the non-default HTTP port the role configures.
+- The running container's OCI version label matches `headplane_version`.
+
 ## Running
 
 By default it is configured to run the scenarios on Ubuntu 26.04.

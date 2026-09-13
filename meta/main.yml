@@ -1,7 +1,9 @@
 ---
 galaxy_info:
   author: spatterlight
+  company: spatterlight
   role_name: headplane
+  namespace: spatterlight
   description: An Ansible role for installing Headplane, a feature-complete Web UI for Headscale
   platforms:
     - name: Debian

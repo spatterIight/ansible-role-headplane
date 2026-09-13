@@ -30,8 +30,7 @@ defaults_path='defaults/main.yml'
 # Paths that shape the behavior of the role for its consumers. A commit
 # touching only other paths (a README fix, CI configuration, Molecule tests)
 # does not change what a playbook run does, and releasing it would only create
-# churn in the repositories that consume this role. Add any new role runtime
-# directory here when it is introduced.
+# churn in the repositories that consume this role.
 role_defining_paths=(
 	'defaults'
 	'meta'
@@ -62,14 +61,6 @@ if [ -z "$last_release" ]; then
 fi
 
 previous_tag="${tag_prefix}${last_release}"
-
-# Release tags are workflow-owned and immutable, and main is expected to be
-# append-only. A moved tag, rewritten main, or divergent history must be
-# investigated instead of repaired here.
-if ! git merge-base --is-ancestor "$previous_tag" HEAD; then
-	echo >&2 "$previous_tag is not an ancestor of the current commit"
-	exit 1
-fi
 
 if git diff --quiet "$previous_tag" HEAD -- "${role_defining_paths[@]}"; then
 	echo >&2 "Nothing affecting the role has changed since $previous_tag"

@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
@@ -17,6 +18,10 @@
     - name: Ensure required packages are installed for Headplane Molecule tests preparation
       ansible.builtin.package:
         name:
+          # `fuse-overlayfs` is the storage driver the inner Docker daemon uses below.
+          # `vfs` also works, but copies the whole image on every layer, which makes
+          # the job several times slower - and this scenario pulls two images.
+          - fuse-overlayfs
           - python3-requests
         state: present
 
@@ -25,4 +30,14 @@
         name: ansible-role-docker
       vars:
         docker_daemon_options:
-          storage-driver: vfs
+          storage-driver: fuse-overlayfs
+
+    # Bind-mounted into the Headplane container through
+    # `headplane_container_additional_volumes`. The role does not create the
+    # source of an additional volume, so it has to exist before the container
+    # is created, or `docker create` refuses the bind.
+    - name: Ensure Headplane Molecule extra volume directory exists
+      ansible.builtin.file:
+        path: "{{ headplane_molecule_extra_volume_host_path }}"
+        state: directory
+        mode: "0755"

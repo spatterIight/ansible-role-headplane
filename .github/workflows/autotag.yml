@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2025 Nikita Chernyi
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -19,14 +20,17 @@ jobs:
     name: Autotag
     runs-on: ubuntu-latest
 
-    # Releases are cut only from main in the repository this role is published
-    # from. A fork has its own incomplete tag namespace, while another branch
-    # may contain code that has not been accepted for release.
-    if: ${{ !github.event.repository.fork && github.ref == 'refs/heads/main' }}
+    # Releases are cut in the repository this role is published from, and there
+    # only. A fork sees its own, incomplete set of tags, so it would compute a
+    # release number that is already taken upstream and attach it to different
+    # code. The `mother-of-all-self-hosting` fork, through which contributions
+    # to this role are staged, is exactly that case.
+    if: ${{ !github.event.repository.fork }}
 
-    # Tag numbers are derived from existing tags, so runs must not compute them
-    # simultaneously. Pending runs may be replaced by newer ones; every run
-    # evaluates current main, so the newest pending state is sufficient.
+    # Tag numbers are derived from the tags that already exist, so two commits
+    # landing close together must not be looked at simultaneously - they would
+    # both compute the same number. Runs are queued rather than cancelled, so
+    # that every commit deserving a release still gets one.
     concurrency:
       group: autotag
       cancel-in-progress: false
@@ -34,12 +38,9 @@ jobs:
     steps:
       # The full history and all tags, since we compare against the previous release.
       - name: Check out
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7.0.0
         with:
           fetch-depth: 0
-          # Concurrency groups do not guarantee dispatch order. Always evaluate
-          # the current release state instead of this run's triggering commit.
-          ref: main
 
       - name: Determine the next tag
         id: tag

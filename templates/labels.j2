@@ -39,7 +39,6 @@ traefik.http.routers.{{ headplane_identifier }}.tls.certResolver={{ headplane_co
 {% endif %}
 
 traefik.http.services.{{ headplane_identifier }}.loadbalancer.server.port={{ headplane_container_http_port }}
-{% endif %}
 
 {% if headplane_container_labels_traefik_path_prefix == '/' and headplane_container_labels_traefik_automatically_redirect_to_admin %}
 traefik.http.routers.{{ headplane_identifier }}-rewrite.rule=Host(`{{ headplane_hostname }}`) && Path(`{{ headplane_path_prefix }}`)
@@ -51,6 +50,7 @@ traefik.http.routers.{{ headplane_identifier }}-rewrite.tls.certResolver={{ head
 {% endif %}
 traefik.http.routers.{{ headplane_identifier }}-rewrite.middlewares={{ headplane_identifier }}-rewrite
 traefik.http.middlewares.{{ headplane_identifier }}-rewrite.addprefix.prefix=/admin
+{% endif %}
 {% endif %}
 
 {{ headplane_container_labels_additional_labels }}

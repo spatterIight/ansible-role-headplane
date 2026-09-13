@@ -17,8 +17,7 @@ repos:
         entry: bash bin/test-compute-next-tag.sh
         language: system
         pass_filenames: false
-        files: >-
-          ^([.]github/workflows/autotag[.]yml|bin/compute-next-tag[.]sh|bin/test-compute-next-tag[.]sh|defaults/main[.]yml)$
+        files: '^(bin/compute-next-tag[.]sh|bin/test-compute-next-tag[.]sh|defaults/main[.]yml)$'
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -41,7 +40,7 @@ repos:
     rev: v2.4.2
     hooks:
       - id: codespell
-  - repo: https://github.com/fsfe/reuse-tool  # https://reuse.software/dev/#pre-commit-hook
+  - repo: https://codeberg.org/fsfe/reuse-tool  # https://reuse.software/dev/#pre-commit-hook
     rev: v6.2.0
     hooks:
       - id: reuse

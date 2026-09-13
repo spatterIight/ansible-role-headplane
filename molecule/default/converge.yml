@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
@@ -8,6 +9,9 @@
   become: true
   gather_facts: true
   tasks:
+    # `ansible-role-headscale` is installed first, so that its container
+    # network exists by the time the Headplane systemd unit tries to connect
+    # its own container to it.
     - name: Include roles for Headplane Molecule tests
       ansible.builtin.include_role:
         name: "{{ role_name }}"
@@ -15,11 +19,12 @@
       loop:
         - com.devture.ansible.role.playbook_help
         - com.devture.ansible.role.systemd_docker_base
+        - ansible-role-headscale
         - "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
       loop_control:
         loop_var: role_name
 
-- name: Ensure Headplane service is started
+- name: Ensure Headscale and Headplane services are started
   hosts: all
   become: true
   gather_facts: false
@@ -27,6 +32,11 @@
     - name: Ensure systemd daemon is reloaded
       ansible.builtin.systemd_service:
         daemon_reload: true
+
+    - name: Ensure Headscale systemd service is started
+      ansible.builtin.systemd_service:
+        name: headscale.service
+        state: started
 
     - name: Ensure Headplane systemd service is started
       ansible.builtin.systemd_service:

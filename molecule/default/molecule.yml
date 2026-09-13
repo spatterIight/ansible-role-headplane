@@ -1,4 +1,6 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -19,8 +21,6 @@ platforms:
     cgroupns_mode: host
     privileged: true
     pre_build_image: true
-    published_ports:
-      - 127.0.0.1:3000:3000
 provisioner:
   name: ansible
   config_options:
@@ -31,16 +31,90 @@ provisioner:
       all:
         # Helper variables
         headplane_debug_service_enabled: false
+        headplane_restarts_check_enabled: true
+        headscale_debug_service_enabled: false
+
+        # The port on the test host that Headplane's web UI is published on.
+        # Deliberately different from the port Headplane listens on inside the
+        # container, so that a mix-up between the two cannot go unnoticed.
+        headplane_molecule_bind_port: 39080
+
+        # Bind-mounted into the Headplane container (read-only) through
+        # `headplane_container_additional_volumes`, and asserted on in
+        # `verify.yml`. Kept outside of `headplane_base_path` so that the
+        # role's own uninstall tasks have no opinion about it.
+        headplane_molecule_extra_volume_host_path: /opt/headplane-molecule-extra
+
+        # Headplane is a web UI for Headscale and cannot be exercised
+        # meaningfully on its own: it boots, serves its login page and answers
+        # redirects with Headscale entirely absent. So the scenario installs a
+        # real Headscale next to it and probes the endpoints that only pass
+        # when the two are actually talking.
+        #
+        # Variables for Headscale
+        headscale_uid: 1000
+        headscale_gid: 1000
+        headscale_hostname: headscale.molecule.test
+        headscale_container_labels_traefik_enabled: false
+
+        # Pinned to a literal value, because `headplane_headscale_config_path`
+        # below points into it and inventory variables cannot rely on another
+        # role's Jinja-derived defaults being resolvable.
+        headscale_base_path: /headscale
+
+        # Headscale (>= 0.29) refuses to start when it ends up with an empty
+        # DERP map, and the role's defaults fill it from Tailscale's published
+        # DERP map over the internet. The embedded DERP server keeps this
+        # scenario from depending on reaching controlplane.tailscale.com.
+        headscale_config_derp_server_enabled: true
+        headscale_config_derp_server_urls: []
+        headscale_config_derp_server_auto_update_enabled: false
+
+        # Headscale checks for its own updates on startup otherwise, which is
+        # another reach for the internet that this scenario does not need.
+        headscale_config_disable_check_updates: true
 
         # Variables for Headplane
         headplane_uid: 1000
         headplane_gid: 1000
-        headplane_hostname: localhost
+        headplane_hostname: headplane.molecule.test
         headplane_cookie_secret: "molecule-test-secret-12345678901"
         headplane_container_labels_traefik_enabled: false
-        headplane_container_http_bind_port: 3000
-        headplane_config_integration_agent_enabled: true
-        headplane_config_headscale_api_key: molecule-headscale-api-key
+
+        # Pinned to a literal value for the same reason as `headscale_base_path`
+        # above: `verify.yml` reads files underneath it and cannot resolve the
+        # role's own default, which derives from `headplane_identifier`.
+        headplane_base_path: /headplane
+
+        # Renders `HEADPLANE_DEBUG_LOG=true` into the role's environment file.
+        # Nothing else in this scenario puts a variable in there, so the debug
+        # lines Headplane then logs are proof that the file reaches the process.
+        headplane_debugging_enabled: true
+
+        # Deliberately not the image's own default of 3000: the port only
+        # reaches the process through the configuration file this role renders,
+        # and the image's healthcheck only finds it through the listen file the
+        # process writes into /tmp.
+        headplane_container_http_port: 3080
+        headplane_container_http_bind_port: "127.0.0.1:{{ headplane_molecule_bind_port }}"
+
+        # Headplane reaches Headscale by container name over Headscale's own
+        # container network, which the role joins through this variable.
+        headplane_container_additional_networks_custom:
+          - headscale
+
+        # Headplane reads the Headscale configuration file for its deep
+        # integration features. Pointed at the one the Headscale role wrote.
+        headplane_headscale_config_path: "{{ headscale_base_path }}/config"
+
+        headplane_container_additional_volumes:
+          - type: bind
+            src: "{{ headplane_molecule_extra_volume_host_path }}"
+            dst: /opt/molecule-extra
+            options: readonly
+
+        headplane_container_extra_arguments:
+          - "--env HEADPLANE_MOLECULE_EXTRA_ARGUMENT=present"
   env:
     # Workaround for https://github.com/ansible/molecule/issues/4391
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
