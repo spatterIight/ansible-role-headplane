@@ -106,8 +106,10 @@ headplane_container_labels_additional_labels: "{{ headplane_container_labels_add
 headplane_container_labels_additional_labels_auto: []
 headplane_container_labels_additional_labels_custom: []
 
-# A list of extra arguments to pass to the container
-headplane_container_extra_arguments: []
+# A list of extra arguments to pass to the container (`docker create` command)
+headplane_container_extra_arguments: "{{ headplane_container_extra_arguments_auto + headplane_container_extra_arguments_custom }}"
+headplane_container_extra_arguments_auto: []
+headplane_container_extra_arguments_custom: []
 
 # List of systemd services that the Headplane systemd service depends on
 headplane_systemd_required_services_list: "{{ (headplane_systemd_required_services_list_default + headplane_systemd_required_services_list_auto + headplane_systemd_required_services_list_custom) | unique }}"
