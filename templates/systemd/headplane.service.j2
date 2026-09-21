@@ -53,7 +53,10 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       {% for arg in headplane_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}
-      {{ headplane_container_image }}
+      {{ headplane_container_image }} \
+      {% for arg in headplane_process_extra_arguments %}
+      {{ arg }} \
+      {% endfor %}
 
 {% for network in headplane_container_additional_networks %}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ headplane_identifier }}

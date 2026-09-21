@@ -111,6 +111,12 @@ headplane_container_extra_arguments: "{{ headplane_container_extra_arguments_aut
 headplane_container_extra_arguments_auto: []
 headplane_container_extra_arguments_custom: []
 
+# A list of extra arguments to pass to the process inside the container
+# Example: ['--SOME_ARGUMENT']
+headplane_process_extra_arguments: "{{ headplane_process_extra_arguments_auto + headplane_process_extra_arguments_custom }}"
+headplane_process_extra_arguments_auto: []
+headplane_process_extra_arguments_custom: []
+
 # List of systemd services that the Headplane systemd service depends on
 headplane_systemd_required_services_list: "{{ (headplane_systemd_required_services_list_default + headplane_systemd_required_services_list_auto + headplane_systemd_required_services_list_custom) | unique }}"
 headplane_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
