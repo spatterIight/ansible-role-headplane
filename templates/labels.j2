@@ -1,5 +1,8 @@
 {#
-SPDX-FileCopyrightText: 2025 spatterlight
+SPDX-FileCopyrightText: 2023 Julian-Samuel Gebühr
+SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+SPDX-FileCopyrightText: 2025, 2026 spatterIight
+SPDX-FileCopyrightText: 2026 Suguru Hirahara
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -22,6 +25,20 @@ traefik.http.middlewares.{{ headplane_identifier }}-slashless-redirect.redirectr
 {% if headplane_container_labels_traefik_path_prefix != '/' %}
 traefik.http.middlewares.{{ headplane_identifier }}-strip-prefix.stripprefix.prefixes={{ headplane_container_labels_traefik_path_prefix }}
 {% set middlewares = middlewares + [headplane_identifier + '-strip-prefix'] %}
+{% endif %}
+
+{% if headplane_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
+{% for name, value in headplane_container_labels_traefik_additional_request_headers.items() %}
+traefik.http.middlewares.{{ headplane_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [headplane_identifier + '-add-request-headers'] %}
+{% endif %}
+
+{% if headplane_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
+{% for name, value in headplane_container_labels_traefik_additional_response_headers.items() %}
+traefik.http.middlewares.{{ headplane_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [headplane_identifier + '-add-response-headers'] %}
 {% endif %}
 
 traefik.http.routers.{{ headplane_identifier }}.rule={{ headplane_container_labels_traefik_rule }}
