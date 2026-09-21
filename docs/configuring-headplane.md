@@ -11,6 +11,7 @@ SPDX-FileCopyrightText: 2022 Warren Bailey
 SPDX-FileCopyrightText: 2023 Antonis Christofides
 SPDX-FileCopyrightText: 2023 Felix Stupp
 SPDX-FileCopyrightText: 2023 Pierre 'McFly' Marty
+SPDX-FileCopyrightText: 2025 spatterlight
 SPDX-FileCopyrightText: 2024-2026 Suguru Hirahara
 
 SPDX-License-Identifier: AGPL-3.0-or-later
@@ -18,11 +19,20 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Setting up Headplane
 
-This is an [Ansible](https://www.ansible.com/) role which installs [Headplane](https://github.com/Headplane/Headplane) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [Headplane](https://headplane.net/) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Headplane is an API for your favorite Torrent trackers. It translates queries from apps ([Sonarr](https://github.com/Sonarr/Sonarr), [Radarr](https://github.com/Radarr/Radarr), etc.) into tracker-site-specific HTTP queries, parses the HTML or JSON response, and then sends results back to the requesting software.
+Headplane is an open-source, self-hosted implementation of the [Tailscale Web UI](https://tailscale.com/) for [Headscale](https://headscale.net/).
 
-See the project's [documentation](https://github.com/Headplane/Headplane/blob/master/README.md) to learn what Headplane does and why it might be useful to you.
+See the project's [documentation](https://headplane.net/introduction) to learn what Headplane does and why it might be useful to you.
+
+## Prerequisites
+
+To run a Headplane instance it is necessary to prepare a Headscale instance.
+
+If you are looking for an Ansible role for Headscale, you can check out [ansible-role-headscale](https://github.com/mother-of-all-self-hosting/ansible-role-headscale) maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team.
+
+>[!NOTE]
+> Headplane and Headscale have version-specific compatibility requirements. See the [Headplane release notes](https://github.com/tale/headplane/releases) and [Headplane agent documentation](https://headplane.net/features/agent) for the relevant upstream information.
 
 ## Adjusting the playbook configuration
 
@@ -54,21 +64,57 @@ To enable Headplane you need to set the hostname as well. To do so, add the foll
 headplane_hostname: "example.com"
 ```
 
-After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
+### Set a random string for cookie secret
 
->[!NOTE]
-> The `headplane_path_prefix` variable can be adjusted to host under a subpath (e.g. `headplane_path_prefix: /headplane`), but this hasn't been tested yet.
-
-### Mounting additional data directories (optional)
-
-To mount additional data directories, add the following configuration to your `vars.yml` file (adapt to your needs):
+You also need to set a random **32 character** string for the secret string used to encode and decode web sessions. To do so, add the following configuration to your `vars.yml` file. The value can be generated with `openssl rand -hex 16` or in another way.
 
 ```yaml
-headplane_container_additional_volumes_custom:
-  - type: bind
-    src: /path/to/blackhole
-    dst: /downloads
+headplane_cookie_secret: YOUR_SECRET_KEY_HERE
 ```
+
+### Enabling the Headplane agent (optional)
+
+The [Headplane agent](https://headplane.net/features/agent) periodically synchronizes information about the nodes in your Tailnet.
+
+To enable the agent, add the following configuration to your `vars.yml` file:
+
+```yaml
+headplane_config_integration_agent_enabled: true
+
+headplane_config_headscale_api_key: YOUR_HEADSCALE_API_KEY_HERE
+```
+
+The agent requires a Headscale API key. If Headplane already uses one, you can reuse the key. Otherwise, you can create one by running the command from [Headscale's API documentation](https://headscale.net/stable/ref/api/) with the [Headscale convenience script](https://github.com/mother-of-all-self-hosting/mash-playbook/blob/main/docs/services/headscale.md#convenience-script-to-call-the-binary) (adapt the path to the binary as necessary):
+
+```sh
+/mash/headscale/bin/headscale apikeys create
+```
+
+>[!NOTE]
+>
+> - Please note that Headscale API keys expire and are only displayed when they are created. Treat the key as a secret, and replace it before it expires.
+> - Since the API key enables to access to the Headscale system, it is recommended to use [Ansible Vault](https://docs.ansible.com/projects/ansible/latest/vault_guide/vault.html) and store the key as `vault_headplane_headscale_api_key` in it.
+
+If Headplane and Headscale shares the same container network as the MASH playbook does, add the the following configuration as well:
+
+```yaml
+headplane_config_integration_agent_tailscale_netns: false
+```
+
+#### Upgrading custom agent configuration from Headplane 0.6
+
+In Headplane 0.7, `integration.agent.cache_ttl` controls the interval between sync attempts in milliseconds. The default is `180000` (three minutes). Headplane 0.6.3 did not use this setting, despite including it in the example configuration.
+
+If you set `cache_ttl` through `headplane_configuration_extension_yaml`, check its value before upgrading. An old example value of `60` now means 60 milliseconds. To request one-minute intervals, merge the following setting into your existing configuration extension, preserving its other settings:
+
+```yaml
+headplane_configuration_extension_yaml: |
+  integration:
+    agent:
+      cache_ttl: 60000
+```
+
+The `integration.agent.cache_path` setting is deprecated and has no effect in Headplane 0.7. Remove it from your configuration extension. The agent's persistent working directory is still controlled by `integration.agent.work_dir`; its default, `/var/lib/headplane/agent`, is inside the data directory mounted by the role.
 
 ### Extending the configuration
 
@@ -77,68 +123,7 @@ There are some additional things you may wish to configure about the service.
 Take a look at:
 
 - [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `headplane_environment_variables_additional_variables` variable
-
-#### Command-line arguments
-
-Additional command line arguments can be passed to Headplane by use of the `RUN_OPTS` environment variable. To specify this, add the following to your `vars.yml` file:
-
-```yaml
-headplane_environment_variables_additional_variables: |
-  RUN_OPTS="--IgnoreSslErrors true --ProxyConnection 192.168.10.3:9999"
-```
-
-The full list of available arguments is as follows:
-
-```sh
-Headplane v0.22.1377
-  -i, --Install            Install Headplane windows service (Must be admin)
-
-  -r, --ReserveUrls        (Re)Register windows port reservations (Required for
-                           listening on all interfaces).
-
-  -u, --Uninstall          Uninstall Headplane windows service (Must be admin).
-
-  -l, --Logging            Log all requests/responses to Headplane
-
-  -t, --Tracing            Enable tracing
-
-  -c, --UseClient          Override web client selection.
-                           [automatic(Default)/httpclient/httpclient2]
-
-  -s, --Start              Start the Jacket Windows service (Must be admin)
-
-  -k, --Stop               Stop the Jacket Windows service (Must be admin)
-
-  -x, --ListenPublic       Listen publicly
-
-  -z, --ListenPrivate      Only allow local access
-
-  -p, --Port               Web server port
-
-  -n, --IgnoreSslErrors    [true/false] Ignores invalid SSL certificates
-
-  -d, --DataFolder         Specify the location of the data folder (Must be
-                           admin on Windows) eg. --DataFolder="D:\Your
-                           Data\Headplane\". Don't use this on Unix (mono)
-                           systems. On Unix just adjust the HOME directory of
-                           the user to the datadir or set the XDG_CONFIG_HOME
-                           environment variable.
-
-  --NoRestart              Don't restart after update
-
-  --PIDFile                Specify the location of PID file
-
-  --NoUpdates              Disable automatic updates
-
-  --help                   Display this help screen.
-
-  --version                Display version information.
-```
-
-### Notes on configuration
-
-- `headplane_container_http_port` describes the container image rather than configuring it. Headplane reads its listening port from the `ServerConfig.json` file it maintains on its own data path, and the container's readiness check is hardcoded to port 9117, so a container listening anywhere else would never come up.
-- Headplane mints an API key on first start and keeps it, in plain text, in `ServerConfig.json` under the role's data path (`/headplane/data/Headplane/ServerConfig.json` by default). Headplane writes that file with mode `0644`; what keeps it private is the `0750` directory the role creates around it, owned by `headplane_uid`:`headplane_gid`. Anything you give that uid or gid to on the host can read the key, and the key is enough to drive the whole Headplane API.
+- The [Headplane example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml) for all the possible configuration options (like OIDC).
 
 ## Installing
 
@@ -154,36 +139,41 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 After running the command for installation, Headplane becomes available at the specified hostname like `https://example.com`.
 
-### Adding an Indexer
+The application being hosted at `/admin` is [not easily configurable](https://github.com/tale/headplane/blob/main/docs/install/native-mode.md#custom-path-prefix). The default configuration is to automatically redirect `/` requests to `/admin`.
 
-Once you've installed Headplane and setup an admin password you can start configuring it. One of the first things you're likely to want to do is configure some indexers. An indexer is basically a tracker, which can be either public, semi-private, or private.
+> [!NOTE]
+> The `headplane_path_prefix` variable can be adjusted to host under a subpath (e.g. `headplane_path_prefix: /headplane`), but this hasn't been tested yet.
 
-To add an indexer, click the `+ Add indexer` button and select your tracker from the list.
+### Logging in
 
-![Headplane Add Indexer](./assets/headplane-add-indexer.webp)
+To [log in to Headplane](https://headplane.net/install/docker#accessing-headplane), run a command to create using the Headscale convenience script as below (adapt the path to the binary as necessary):
 
-If its a semi-private or private tracker you will have to add some specific configuration, like a username and password. If its public you can just add it as-is.
+```sh
+/mash/headscale/bin/headscale apikeys create
+```
 
-Once its added you can test it using the `Test ✓` button, if it returns successfully you're good to go!
+You can then log in to `https://example.com/admin` by entering the generated API key.
 
-### Integration with Sonarr/Radarr
+### Modifying DNS
 
-To add Headplane to your [Sonarr](https://sonarr.tv/) or [Radarr](https://radarr.video/) instance navigate to the form at `Settings > Indexers > Add > Torznab > Custom`:
+To modify the Headscale DNS settings in Headplane, some variables should be adjusted as follows:
 
-![Sonarr Add Indexer](./assets/sonarr-add-indexer.webp)
+```yaml
+# Change the name of the variable as necessary; this case ansible-role-headscale is used to install Headscale
+headscale_extra_records_path_enabled: true
 
-Next copy Headplane's `API Key` from in the top right of the Headplane dashboard:
+headplane_headscale_config_path_mount_options: readwrite
+```
 
-![Headplane API Key](./assets/headplane-api-key.webp)
+Be careful when you make changes outside of the `DNS Records` section, since many of other configuration options will directly modify the Headscale configuration file managed by Ansible -- this is likely to lead to conflicts. The `DNS Records` section does not have this issue since it uses a separate file (`extra_records.json`).
 
-Paste this into the Sonarr/Radarr form, under `API Key`.
+### Modifying Access Control Lists
 
-Next, click `Copy Torznab Feed` of the indexer (tracker) you added to Headplane. Paste this into the Sonarr/Radarr form too, under `URL`.
+To modify Headscale ACL's you'll need to adjust the Headscale configuration:
 
-Fill in the rest of the form with your preferences, and you're done!
-
->[!NOTE]
-> If you are looking for an Ansible role for Sonarr and Radarr, you can check out [ansible-role-sonarr](https://github.com/spatterIight/ansible-role-sonarr) and [ansible-role-radarr](https://github.com/spatterIight/ansible-role-radarr), both of which are maintained by me.
+```yaml
+headscale_config_policy_mode: database
+```
 
 ## Troubleshooting
 
