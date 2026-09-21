@@ -35,6 +35,13 @@
     - headplane_headscale_hostname
     - headplane_headscale_port
 
+- name: Fail if Headplane cookie secret is not 32 characters
+  ansible.builtin.fail:
+    msg: >-
+      headplane_cookie_secret needs to be 32 characters.
+      The value can be generated with `openssl rand -hex 16` or in another way.
+  when: (headplane_cookie_secret | length) != 32
+
 - name: Fail if Headplane agent integration is enabled without a Headscale API key
   ansible.builtin.fail:
     msg: >-
