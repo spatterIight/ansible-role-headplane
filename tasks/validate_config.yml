@@ -69,6 +69,13 @@
 - name: Validate Headplane Traefik configuration
   when: headplane_container_labels_traefik_enabled | bool
   block:
+    - name: (Deprecation) Catch and report Headplane labels for Traefik in the old string format
+      ansible.builtin.fail:
+        msg: >-
+          `headplane_container_labels_additional_labels` now require a list of strings.
+          Replace `headplane_container_labels_additional_labels: |` with `headplane_container_labels_additional_labels_custom:` and make each label a list item.
+      when: "headplane_container_labels_additional_labels | default([]) is string"
+
     - name: Fail if Traefik settings required for Headplane are not defined
       ansible.builtin.fail:
         msg: >-

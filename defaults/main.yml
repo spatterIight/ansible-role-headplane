@@ -99,10 +99,12 @@ headplane_container_labels_traefik_automatically_redirect_to_admin: true
 # To add your own custom labels, use `headplane_container_labels_additional_labels_custom`
 #
 # Example:
-# headplane_container_labels_additional_labels: |
-#   my.label=1
-#   another.label="here"
-headplane_container_labels_additional_labels: ""
+# headplane_container_labels_additional_labels_custom:
+#   - my.label=1
+#   - another.label="here"
+headplane_container_labels_additional_labels: "{{ headplane_container_labels_additional_labels_auto + headplane_container_labels_additional_labels_custom }}"
+headplane_container_labels_additional_labels_auto: []
+headplane_container_labels_additional_labels_custom: []
 
 # A list of extra arguments to pass to the container
 headplane_container_extra_arguments: []

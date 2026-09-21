@@ -53,4 +53,6 @@ traefik.http.middlewares.{{ headplane_identifier }}-rewrite.addprefix.prefix=/ad
 {% endif %}
 {% endif %}
 
-{{ headplane_container_labels_additional_labels }}
+{% for arg in headplane_container_labels_additional_labels %}
+{{ arg }}
+{% endfor %}
