@@ -56,13 +56,15 @@ provisioner:
         # Variables for Headscale
         headscale_uid: 1000
         headscale_gid: 1000
-        headscale_hostname: headscale.molecule.test
-        headscale_container_labels_traefik_enabled: false
 
         # Pinned to a literal value, because `headplane_headscale_config_path`
         # below points into it and inventory variables cannot rely on another
         # role's Jinja-derived defaults being resolvable.
         headscale_base_path: /headscale
+
+        headscale_hostname: headscale.molecule.local
+
+        headscale_container_labels_traefik_enabled: false
 
         # Headscale (>= 0.29) refuses to start when it ends up with an empty
         # DERP map, and the role's defaults fill it from Tailscale's published
@@ -79,19 +81,17 @@ provisioner:
         # Variables for Headplane
         headplane_uid: 1000
         headplane_gid: 1000
-        headplane_hostname: headplane.molecule.test
-        headplane_cookie_secret: "molecule-test-secret-12345678901"
-        headplane_container_labels_traefik_enabled: false
 
         # Pinned to a literal value for the same reason as `headscale_base_path`
         # above: `verify.yml` reads files underneath it and cannot resolve the
         # role's own default, which derives from `headplane_identifier`.
         headplane_base_path: /headplane
 
-        # Renders `HEADPLANE_DEBUG_LOG=true` into the role's environment file.
-        # Nothing else in this scenario puts a variable in there, so the debug
-        # lines Headplane then logs are proof that the file reaches the process.
-        headplane_debugging_enabled: true
+        # Headplane reads the Headscale configuration file for its deep
+        # integration features. Pointed at the one the Headscale role wrote.
+        headplane_headscale_config_path: "{{ headscale_base_path }}/config"
+
+        headplane_hostname: headplane.molecule.local
 
         # Deliberately not the image's own default of 3000: the port only
         # reaches the process through the configuration file this role renders,
@@ -105,18 +105,23 @@ provisioner:
         headplane_container_additional_networks_custom:
           - headscale
 
-        # Headplane reads the Headscale configuration file for its deep
-        # integration features. Pointed at the one the Headscale role wrote.
-        headplane_headscale_config_path: "{{ headscale_base_path }}/config"
-
         headplane_container_additional_volumes:
           - type: bind
             src: "{{ headplane_molecule_extra_volume_src }}"
             dst: "{{ headplane_molecule_extra_volume_dst }}"
             options: readonly
 
+        headplane_container_labels_traefik_enabled: false
+
         headplane_container_extra_arguments:
           - "--env HEADPLANE_MOLECULE_EXTRA_ARGUMENT=present"
+
+        headplane_cookie_secret: "molecule-test-secret-12345678901"
+
+        # Renders `HEADPLANE_DEBUG_LOG=true` into the role's environment file.
+        # Nothing else in this scenario puts a variable in there, so the debug
+        # lines Headplane then logs are proof that the file reaches the process.
+        headplane_debugging_enabled: true
   env:
     # Workaround for https://github.com/ansible/molecule/issues/4391
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
