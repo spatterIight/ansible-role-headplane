@@ -39,11 +39,13 @@ provisioner:
         # container, so that a mix-up between the two cannot go unnoticed.
         headplane_molecule_bind_port: 39080
 
-        # Bind-mounted into the Headplane container (read-only) through
-        # `headplane_container_additional_volumes`, and asserted on in
-        # `verify.yml`. Kept outside of `headplane_base_path` so that the
-        # role's own uninstall tasks have no opinion about it.
-        headplane_molecule_extra_volume_host_path: /opt/headplane-molecule-extra
+        # The host directory mounted into the container through
+        # `headplane_container_additional_volumes`, and the file placed in it by
+        # prepare.yml. Reading that file from inside the container is what
+        # proves the additional volumes reach the systemd unit rather than
+        # being merely declared in defaults/main.yml.
+        headplane_molecule_extra_volume_src: /opt/headplane-molecule-extra
+        headplane_molecule_extra_volume_dst: /opt/molecule-extra
 
         # Headplane is a web UI for Headscale and cannot be exercised
         # meaningfully on its own: it boots, serves its login page and answers
@@ -109,8 +111,8 @@ provisioner:
 
         headplane_container_additional_volumes:
           - type: bind
-            src: "{{ headplane_molecule_extra_volume_host_path }}"
-            dst: /opt/molecule-extra
+            src: "{{ headplane_molecule_extra_volume_src }}"
+            dst: "{{ headplane_molecule_extra_volume_dst }}"
             options: readonly
 
         headplane_container_extra_arguments:

@@ -42,6 +42,6 @@
     # is created, or `docker create` refuses the bind.
     - name: Ensure Headplane Molecule extra volume directory exists
       ansible.builtin.file:
-        path: "{{ headplane_molecule_extra_volume_host_path }}"
+        path: "{{ headplane_molecule_extra_volume_src }}"
         state: directory
         mode: "0755"

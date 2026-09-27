@@ -198,16 +198,19 @@
             fail_msg: "Headplane logged no debug lines, so HEADPLANE_DEBUG_LOG did not reach it"
             success_msg: "Headplane logs debug lines, so the environment file reaches it"
 
-        - name: Assert the additional container volume is mounted read-only
-          vars:
-            headplane_molecule_extra_mount: "{{ headplane_container.Mounts | selectattr('Destination', 'equalto', '/opt/molecule-extra') | list }}"
+        - name: Collect the mounts the role asked for
+          ansible.builtin.set_fact:
+            headplane_extra_mount: "{{ headplane_container.Mounts | selectattr('Destination', 'equalto', headplane_molecule_extra_volume_dst) | list }}"
+
+        - name: Assert that headplane_container_additional_volumes reached the container
           ansible.builtin.assert:
             that:
-              - headplane_molecule_extra_mount | length == 1
-              - headplane_molecule_extra_mount[0].Source == headplane_molecule_extra_volume_host_path
-              - not headplane_molecule_extra_mount[0].RW
-            fail_msg: "headplane_container_additional_volumes did not become a read-only bind mount: {{ headplane_container.Mounts }}"
-            success_msg: "headplane_container_additional_volumes became a read-only bind mount"
+              - headplane_extra_mount | length == 1
+              - headplane_extra_mount[0].Type == 'bind'
+              - headplane_extra_mount[0].Source == headplane_molecule_extra_volume_src
+              - not headplane_extra_mount[0].RW
+            fail_msg: "The additional volume did not reach the container: {{ headplane_container.Mounts }}"
+            success_msg: "The additional volume is mounted read-only at {{ headplane_molecule_extra_volume_dst }}"
 
         - name: Assert the extra container arguments reach the container
           ansible.builtin.assert:
