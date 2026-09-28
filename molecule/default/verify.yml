@@ -202,7 +202,7 @@
           ansible.builtin.set_fact:
             headplane_extra_mount: "{{ headplane_container.Mounts | selectattr('Destination', 'equalto', headplane_molecule_extra_volume_dst) | list }}"
 
-        - name: Assert that headplane_container_additional_volumes reached the container
+        - name: Assert that headplane_container_additional_volumes_custom reached the container
           ansible.builtin.assert:
             that:
               - headplane_extra_mount | length == 1

@@ -40,7 +40,7 @@ provisioner:
         headplane_molecule_bind_port: 39080
 
         # The host directory mounted into the container through
-        # `headplane_container_additional_volumes`, and the file placed in it by
+        # `headplane_container_additional_volumes_custom`, and the file placed in it by
         # prepare.yml. Reading that file from inside the container is what
         # proves the additional volumes reach the systemd unit rather than
         # being merely declared in defaults/main.yml.
@@ -105,7 +105,7 @@ provisioner:
         headplane_container_additional_networks_custom:
           - headscale
 
-        headplane_container_additional_volumes:
+        headplane_container_additional_volumes_custom:
           - type: bind
             src: "{{ headplane_molecule_extra_volume_src }}"
             dst: "{{ headplane_molecule_extra_volume_dst }}"

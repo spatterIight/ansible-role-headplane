@@ -37,7 +37,7 @@
           storage-driver: fuse-overlayfs
 
     # Bind-mounted into the Headplane container through
-    # `headplane_container_additional_volumes`. The role does not create the
+    # `headplane_container_additional_volumes_custom`. The role does not create the
     # source of an additional volume, so it has to exist before the container
     # is created, or `docker create` refuses the bind.
     - name: Ensure Headplane Molecule extra volume directory exists
